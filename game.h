@@ -7,5 +7,7 @@ class Game{
 	Board *board;
 	Player *players[];
 
-
 }
+
+
+#endif	/* GAME_H */
