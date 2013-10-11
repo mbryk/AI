@@ -8,14 +8,13 @@ Board::Board(state = DEFAULT){
 			square[row][col] = new Square(row, col, state[place]);
 		}
 	}
-
 }
 
 Board::print(){
 	for(row=7; row>=0; row--){
 		for(column=7; column>=0; column--){
 			color= square[row][column].color;
-			cout<< colors[lower(color)] << format[color]; //Colors is a key value array with "r"=>red, "b"=>black, "-"=>white
+			cout<< format[color]; //Colors is a key value array with "r"=>red, "b"=>black, "-"=>white
 		}
 		cout<<endl;
 	}
@@ -23,7 +22,7 @@ Board::print(){
 
 Board::getLegalMoves(color){
 	Square myPieces[];
-	Move moves[];
+	Move *moves[];
 	for(int row=0; row<8; row++){
 		for(int col=0; col<8; col++){
 			if(square[row][col].color==color) myPieces[] = square[row][col];
@@ -31,69 +30,78 @@ Board::getLegalMoves(color){
 	}
 
 	for(int i=0;i<sizeof(myPieces);i++){
-		moves = getLegalMovesPiece(myPieces[i]);
+		getLegalMovesPiece(myPieces[i], &moves);
 	}
 }
 
-Board::getLegalMovesPiece(Square piece, bool only_jumps = false){
-	Square spots[];
-	spots = getAdjacents(row,column);
-	Move moves[];
-	moves = getJumps(spots, piece);
-	if(!(moves || only_jumps)) moves = getNonJumps(spots, piece);		
-
-	return moves;
+Board::getLegalMovesPiece(Square piece, bool only_jumps = false, Move *moves[]){
+	getJumps(piece, &moves);
+	if(!(moves || only_jumps)) getNonJumps(piece, &moves);		
 }
 
-Board::getAdjacents(Square square){
-	Square spots[];
-	if(square.king || square.color == "r")) //This is not a regular black (Go up)
-	{
-		if(isValid(square.row+1, square.column-1)) 
-			spots[] = new Square(square.row+1, square.column-1);
-		if(isValid(square.row+1, square.column+1)) 
-			spots[] = new Square(square.row+1, square.column+1);
+Board::getAdjacents(int row, int col, bool available, Square *spots[]){ // Available = Valid and empty, Unavailable = Valid and other color
+	Square current = square[row][col];
+	if(current.king || current.color == "r")){ //This is not a regular black (Go up)
+		if(isValid(row+1, col-1)){
+			Square s = square[row+1][square.col-1];
+			if((available && !s.occupied) || (!available && s.occupied && s.color!=current.color))
+				spots[] = square[row+1][square.col-1];
+		}
+		if(isValid(row+1, col+1)){ 
+			Square s = square[row+1][square.col+1];
+			if((available && !s.occupied) || (!available && s.occupied && s.color!=current.color))
+				spots[] = square[row+1][square.col+1];
+		}
 	}
-	if(square.king || square.color == "b")) //This is not a regular red (Go down)
-	{
-		if(isValid(square.row-1, square.column-1)) 
-			spots[] = new Square(square.row-1, square.column-1);
-		if(isValid(square.row-1, square.column+1)) 
-			spots[] = new Square(square.row+1, square.column+1);
+	if(current.king || current.color == "b")){ //This is not a regular red (Go down)
+		if(isValid(row-1, col-1)){
+			Square s = square[row-1][square.col-1];
+			if((available && !s.occupied) || (!available && s.occupied && s.color!=current.color))
+				spots[] = square[row-1][square.col-1];
+		}
+		if(isValid(row-1, col+1)){ 
+			Square s = square[row-1][square.col+1];
+			if((available && !s.occupied) || (!available && s.occupied && s.color!=current.color))
+				spots[] = square[row-1][square.col+1];
+		}
 	}
-	return spots;
 }
 
 Board::isValid(row, col){
 	return (row>=0 && row<8 && col>=0 && col<8);
 }
 
-Board::getJumps(Square spots[], Square origin){
-	Move moves[];
-	foreach(spot in spots){
-		if(spot.occupied && spot.color != origin.color){
-			Square dest = getNextSquare(origin, spot);
-			if(!dest.occupied){
+Board::getJumps(Square origin, Move *moves[]){
+	Square *spots[];
+	Square *spot;
+	getAdjacents(origin.x, origin.y,0,&spots);
+	for(i=0; i<sizeof(spots); i++){
+		spot = spots[i];
+		Square dest = getNextSquare(origin, spot);
+		if(dest!=NULL && !dest.occupied){
 				move = new Move(origin, spot);
 				boardtmp = Board.copy();
 				boardtmp = Board.makeMove(move);
-				move.nextJump = boardtmp.getLegalMovesPiece(move.destination, 1);
+				boardtmp.getLegalMovesPiece(move.destination, 1, &move.nextJump);
 				moves[] = move;
 			}
 		}
 
-	}
-	return moves;
-	
+	}	
 }
 
-Board::getNonJumps(Square spots[], Square origin){
-	Move moves[];
-	foreach(spot in spots){
-		if(!spot.occupied){
-			moves[] = new Move(origin, spot);
-		}
+Board::getNonJumps(Square origin, Move *moves[]){
+	Square *spots[];
+	getAdjacents(origin.x, origin.y, 1, &spots);
+	for(i=0;i<sizeof(spots); i++){
+		moves[] = new Move(origin, spot);
 	}
+}
+
+Board::getNextSquare(Square origin,Square jumped){
+	int row = jumped.x + jumped.x-origin.x;
+	int col = jumped.y + jumped.y-origin.y;
+	return isValid(row, col)?square[row][col]:NULL;
 }
 
 Board::makeMove(Move move){

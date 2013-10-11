@@ -6,7 +6,7 @@ class Move{
 public:
 	Square origin;
 	Square destination;
-	Move nextJump[];
-}
+	Move *nextJump[];
+};
 
 #endif	/* MOVE_H */

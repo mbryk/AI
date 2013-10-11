@@ -1,6 +1,6 @@
 #ifndef BOARD_H
 #define	BOARD_H
-#include "ConsoleColor.h"
+//#include "ConsoleColor.h"
 #include "square.h"
 #include "move.h"
 
@@ -10,6 +10,6 @@ public:
 	
 
 
-}
+};
 
 #endif	/* BOARD_H */

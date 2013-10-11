@@ -1,12 +1,18 @@
 #include "game.h"
+#include "unistd.h"
+#include <iostream>
+using namespace std;
+
 int main(int argc, char *argv[]){
-	string state = "";
-	char players[] = ["1","0"];
+	string state = "a";
+	int players[2] = {1,0};
+	int c = 0;
 	while ((c = getopt (argc, argv, "s:p:")) != -1){
 		switch (c){
 			case 's':
-				stateFile = openfile(optarg);
-				state = parse(stateFile);
+				//stateFile = openfile(optarg);
+				//state = parse(stateFile);
+				state = "";
 				break;
 			case 'p':
 				players[0] = optarg[0];
@@ -14,7 +20,7 @@ int main(int argc, char *argv[]){
 				break;
 		}
 	}
-	Game game(state, players);
+	Game game = new Game(state, players);
 	int turn;	
 	cout<<"Whose turn is it?"<<endl<<"0:Red, 1:Black"<<endl;
 	cin>>turn;

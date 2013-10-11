@@ -5,10 +5,6 @@
 class Player{
 	int type;
 	int color;
-
-
-}
-
-
+};
 
 #endif	/* PLAYER_H */
