@@ -15,8 +15,8 @@ int main(int argc, char *argv[]){
 				state = "";
 				break;
 			case 'p':
-				players[0] = optarg[0];
-				players[1] = optarg[1];
+				players[0] = optarg[0] - '0';
+				players[1] = optarg[1] - '0';
 				break;
 		}
 	}

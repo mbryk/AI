@@ -2,6 +2,7 @@
 #define	GAME_H
 #include "board.h"
 #include "player.h"
+#include "move.h"
 
 class Game{
 public:

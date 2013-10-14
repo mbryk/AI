@@ -1,9 +1,6 @@
 #include "player.h"
 
-Player::Player(player_type, player_color, time_limit = 0){
-	type = player_type - '0';
-	color = player_color;
-	timelim = player_type?time_limit:0;
+Player::Player(int time_limit = 0){
 }
 
 Player::move(Move *moves[]){

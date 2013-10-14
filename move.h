@@ -5,8 +5,10 @@
 class Move{
 public:
 	Square origin;
-	Square destination;
-	Move *nextJump[];
+	Square dest;
+	Square jump;
+	Move *nextJumps[];
+	Move nextJumpChosen;
 };
 
 #endif	/* MOVE_H */

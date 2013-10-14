@@ -1,9 +1,8 @@
 #include "square.h"
 
-Square::Square(int xloc, int yloc, char pcolor, bool is_king = 0){
-	if(occupied = (bool) pcolor){
-
-	}
-	
+Square::Square(int pcolor, int xloc, int yloc, bool is_king = 0){
+	occupied = (bool) pcolor;
+	color = pcolor;
 	x = xloc; y = yloc;
+	king = is_king;
 }

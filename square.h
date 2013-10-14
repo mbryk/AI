@@ -5,9 +5,9 @@ class Square{
 	public:
 		int x,y;
 		bool occupied;
-		int color;
-		bool is_king;
-
+		int color; //1 = RED, 2 = BLACK
+		bool king;
+		Square(int pcolor, int xloc, int yloc, bool is_king = 0);
 };
 
 
