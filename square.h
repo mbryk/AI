@@ -7,7 +7,7 @@ class Square{
 		bool occupied;
 		int color; //1 = RED, 2 = BLACK
 		bool king;
-		Square(int pcolor, int xloc, int yloc, bool is_king = 0);
+		Square(int, int, int);
 };
 
 

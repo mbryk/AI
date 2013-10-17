@@ -4,7 +4,8 @@
 using namespace std;
 
 int main(int argc, char *argv[]){
-	string state = "a";
+	//string state = "a";
+	char *state = NULL;
 	int players[2] = {1,0};
 	int c = 0;
 	while ((c = getopt (argc, argv, "s:p:")) != -1){
@@ -12,7 +13,6 @@ int main(int argc, char *argv[]){
 			case 's':
 				//stateFile = openfile(optarg);
 				//state = parse(stateFile);
-				state = "";
 				break;
 			case 'p':
 				players[0] = optarg[0] - '0';
@@ -20,11 +20,11 @@ int main(int argc, char *argv[]){
 				break;
 		}
 	}
-	Game game = new Game(state, players);
+	Game *game = new Game(state, players);
 	int turn;	
 	cout<<"Whose turn is it?"<<endl<<"0:Red, 1:Black"<<endl;
 	cin>>turn;
-	game.play(turn);	
+	game->play(turn);	
 
 	return 0;
 }

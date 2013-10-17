@@ -1,25 +1,26 @@
 #include "player.h"
+using namespace std;
 
-Player::Player(int time_limit = 0){
+Player::Player(){
 }
 
-Player::move(Move *moves[]){
-	return (type = computer)?chooseBest(moves):getChoice(moves);
+Move *Player::move(vector<Move*> &moves){
+	return (type)?getChoice(moves):chooseBest(moves);
 }
 
-Player::chooseBest(Move *moves[]){
-	pick random(moves);
-
+Move *Player::chooseBest(vector<Move*> &moves){
+	return moves.at(0);
 }
 
-Player::getChoice(Move *moves[]){
+Move *Player::getChoice(vector<Move*> &moves){
 	printMoves(moves);
-	cin>>move;
-	return move;
+	int movenum;
+	cin>>movenum;
+	return moves.at(movenum);
 }
 
-Player::printMoves(Move *moves[]){
-	for(i=0;i<sizeof(moves); i++){
-		moves[i].print();
+void Player::printMoves(vector<Move*> &moves){
+	for(int i=0;i<sizeof(moves); i++){
+		moves[i]->print();
 	}
 }

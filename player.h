@@ -1,20 +1,22 @@
 #ifndef PLAYER_H
 #define	PLAYER_H
 #include "move.h"
+#include <vector>
+#include <iostream>
 
 class Player{
 public:
-	int type; //0=Comp, 1=Human
+	bool type; //0=Comp, 1=Human
 	int color;
 	int timelim;
 
-	Player(int time_limit = 0);
-	Move move(Move *moves[]);
+	Player();
+	Move *move(std::vector<Move*>&);
 
 private:
-	Move chooseBest(Move *moves[]);
-	Move getChoice(Move *moves[]);
-	void printMoves(Move *moves[]);
+	Move *chooseBest(std::vector<Move*>&);
+	Move *getChoice(std::vector<Move*>&);
+	void printMoves(std::vector<Move*>&);
 };
 
 #endif	/* PLAYER_H */
