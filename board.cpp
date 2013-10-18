@@ -203,3 +203,34 @@ Board* Board::copy(){
 	}
 	return new Board(state);	
 }
+
+void Board::assignVals(vector<Move*> &moves, int color){
+	Move *move;
+	Board *boardtmp;
+	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
+		move = *it;
+		boardtmp = copy();
+		boardtmp->makeMove(move);
+		if(!move->nextJumps.empty()){
+			boardtmp->assignVals(move->nextJumps, color);
+		} else {
+			move->value = boardtmp->evaluateBoard(color);
+		}
+	}
+}
+
+int Board::evaluateBoard(int color){
+	int pieceDiff = (countPieces(color) - countPieces(3-color));
+	return pieceDiff*1000 + rand()%1000;
+}
+
+int Board::countPieces(int color){
+	int count = 0;
+	for(int row=0; row<8; row++){
+		for(int col=0; col<4; col++){
+			if(square[row][col]->occupied && square[row][col]->color==color) 
+				count++;
+		}
+	}
+	return count;
+}

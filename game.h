@@ -4,15 +4,17 @@
 #include "player.h"
 #include "move.h"
 #include <vector>
+#include <string>
 #include <iostream>
 #include "time.h"
 #include <cstdlib>
 
 class Game{
 public:
-	Game(char *state, int player_types[2]);
+	Game(char*, int player_types[2], bool);
 	void play(int);
 private:
+	bool prints;
 	Board *board;
 	Player *players[];
 }; 

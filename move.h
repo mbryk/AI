@@ -11,6 +11,7 @@ public:
 	Square *origin, *dest, *jumped;
 	Move *nextJumpChosen;
 	std::vector<Move*> nextJumps;
+	int value;
 	Move(Square*, Square*);
 	void print();
 private:

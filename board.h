@@ -15,6 +15,7 @@ public:
 	void print();
 	void getLegalMoves(int, vector<Move*>&);
 	int makeMove(Move*); // returns "Successful?"
+	void assignVals(vector<Move*>&, int);
 
 private:
 	Square *square[8][4];
@@ -28,6 +29,9 @@ private:
 	bool checkKing(Square*);
 	int terminalTest(int);
 	Board *copy();
+	int evaluateBoard(int);
+	int countPieces(int);
+
 };
 
 #endif	/* BOARD_H */
