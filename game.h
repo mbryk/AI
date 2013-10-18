@@ -5,6 +5,8 @@
 #include "move.h"
 #include <vector>
 #include <iostream>
+#include "time.h"
+#include <cstdlib>
 
 class Game{
 public:

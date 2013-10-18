@@ -3,14 +3,15 @@
 using namespace std;
 
 Board::Board(char *state){
-	//if(!state) state = "-1-1-1-1.1-1-1-1-.-1-1-1-1.--------.--------.2-2-2-2-.-2-2-2-2.2-2-2-2-";
-	//if(!state) state = "---1-1-1.----1-1-.---1-1-1.--1-----.-1---2--.1-------.---2-2-2.2-2-2-2-";
-	if(!state) state = "-----1-1.----1-1-.-------1.----2---.--------.--1-----.-------2.------2-";
+	//if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
+	
+	if(!state) state = "1111.1111.-11-.1--1.2-2-.2-2-.2222.2222";
+	
 	
 	int color, place;
 	for(int row=0; row<8; row++){
-		for(int col=0; col<8; col++){
-			place = row*9 + col;
+		for(int col=0; col<4; col++){
+			place = row*5 + col;
 			color = (state[place]=='-')? 0 : state[place]-'0';
 			square[row][col] = new Square(color, row, col);
 			if(color>2){
@@ -22,24 +23,44 @@ Board::Board(char *state){
 }
 
 void Board::print(){
-	const char *shapes[3] = {"\033[0m--","\033[41m  ","\033[45m  "};
+	//0=Black, 1=Red Piece, 2=Black Piece, 3=Red King, 4=Black King, 5=Red
+	const char *shapes[6] = {"\033[40m     ","\033[40m \033[43m   \033[40m ","\033[40m \033[45m   \033[40m ", "\033[40m \033[43m K \033[40m ","\033[40m \033[45m K \033[40m ","\033[41m     "};
 	int color;
-	cout<<" 0 1 2 3 4 5 6 7"<<endl;
+	cout<<"     0    1    2    3    4    5    6    7"<<endl;
 	for(int row=7; row>=0; row--){
-		cout<<row;
-		for(int column=0; column<8; column++){
-			color = (square[row][column]->occupied)? square[row][column]->color : 0;
+		printRow(row%2);
+		cout<<" "<<row<<" ";
+		if(!(row%2)) cout<<shapes[5];
+		for(int column=0; column<4; column++){
+			if(square[row][column]->occupied){
+				color = square[row][column]->color;
+				if(square[row][column]->king) color+=2;
+			}
+			else color = 0;
 			cout<< shapes[color];
+
+			if(row%2 || column!=3) cout<<shapes[5];//Red square
 		}
-		cout<<"\033[0m"<<endl;
+		cout<<"\033[0m "<<row<<endl;
+		printRow(row%2);
 	}
-	cout<<endl<<endl;
+	cout<<"     0    1    2    3    4    5    6    7"<<endl<<endl<<endl;
+}
+
+void Board::printRow(int offset){ //Offset = 0 => Red First
+	const char *shapes[2] = {"\033[41m     ", "\033[40m     "};
+	cout<<"   ";
+	for(int column=0;column<8;column++){
+		cout<<shapes[offset];
+		offset = 1-offset;
+	}
+	cout<<"\033[0m"<<endl;
 }
 
 void Board::getLegalMoves(int color, vector<Move*> &moves){
 	vector<Square*> myPieces;
 	for(int row=0; row<8; row++){
-		for(int col=0; col<8; col++){
+		for(int col=0; col<4; col++){
 			if(square[row][col]->occupied && square[row][col]->color==color) 
 				myPieces.push_back(square[row][col]);
 		}
@@ -87,28 +108,29 @@ void Board::getNonJumps(Square *origin, vector<Move*> &moves){
 }
 
 void Board::getAdjacents(Square *current, vector<Square*> &spots, bool available){ // Available = Valid and empty, Unavailable = Valid and other color (for jumps)
-	int row = current->x; int col = current->y;
+	int row = current->x; int col = current->y; 
+	int col2 = (row%2) ? col-1 : col+1;
 	Square* s;
-	if(current->king==1 || current->color == 1){ //This is not a regular black (Go up)
-		if(isValid(row+1, col-1)){
-			s = square[row+1][col-1];
+	if(current->king || current->color == 1){ //This is not a regular black (Go up)
+		if(isValid(row+1, col)){
+			s = square[row+1][col];
 			if((available && !s->occupied) || (!available && s->occupied && s->color!=current->color))
 				spots.push_back(s);
 		}
-		if(isValid(row+1, col+1)){ 
-			s = square[row+1][col+1];
+		if(isValid(row+1, col2)){ 
+			s = square[row+1][col2];
 			if((available && !s->occupied) || (!available && s->occupied && s->color!=current->color))
 				spots.push_back(s);
 		}
 	}
-	if(current->king==1 || current->color == 2){ //This is not a regular red (Go down)
-		if(isValid(row-1, col-1)){
-			s = square[row-1][col-1];
+	if(current->king || current->color == 2){ //This is not a regular red (Go down)
+		if(isValid(row-1, col)){
+			s = square[row-1][col];
 			if((available && !s->occupied) || (!available && s->occupied && s->color!=current->color))
 				spots.push_back(s);
 		}
-		if(isValid(row-1, col+1)){ 
-			s = square[row-1][col+1];
+		if(isValid(row-1, col2)){ 
+			s = square[row-1][col2];
 			if((available && !s->occupied) || (!available && s->occupied && s->color!=current->color))
 				spots.push_back(s);
 		}
@@ -116,12 +138,13 @@ void Board::getAdjacents(Square *current, vector<Square*> &spots, bool available
 }
 
 bool Board::isValid(int row, int col){
-	return (row>=0 && row<8 && col>=0 && col<8);
+	return (row>=0 && row<8 && col>=0 && col<4);
 }
 
 Square *Board::getNextSquare(Square *origin,Square *jumped){
+	int off = !(jumped->x%2) ? 1 : -1;
 	int row = jumped->x + jumped->x-origin->x;
-	int col = jumped->y + jumped->y-origin->y;
+	int col = jumped->y + jumped->y-origin->y + off;
 	return isValid(row, col)?square[row][col]:NULL;
 }
 
@@ -158,7 +181,7 @@ bool Board::checkKing(Square *sq){
 int Board::terminalTest(int color){
 	vector<Square*> myPieces;
 	for(int row=0; row<8; row++){
-		for(int col=0; col<8; col++){
+		for(int col=0; col<4; col++){
 			if(square[row][col]->occupied && square[row][col]->color!=color) 
 				return 0;
 		}
@@ -167,11 +190,11 @@ int Board::terminalTest(int color){
 }
 
 Board* Board::copy(){
-	char *state = (char*) malloc(100);
+	char *state = (char*) malloc(50);
 	int place, place_int, color;
 	for(int row=0; row<8; row++){
-		for(int col=0; col<8; col++){
-			place = row*9 + col;
+		for(int col=0; col<4; col++){
+			place = row*5 + col;
 			color = square[row][col]->color;
 			place_int = square[row][col]->king? color+2: color;
 			state[place] = square[row][col]->occupied?(place_int+'0'):'-';

@@ -1,7 +1,8 @@
 #include "player.h"
 using namespace std;
 
-Player::Player(){
+Player::Player(int ptype){
+	type = ptype;
 }
 
 Move *Player::move(vector<Move*> &moves){
@@ -10,24 +11,32 @@ Move *Player::move(vector<Move*> &moves){
 
 Move *Player::chooseBest(vector<Move*> &moves){
 	printMoves(moves);
-	Move *move = moves.at(0);
+	int num = rand() % moves.size();
+	Move *move = moves.at(num);
 	if(!move->nextJumps.empty()){
-		move->nextJumpChosen = move->nextJumps.at(0);
+		num = rand() % move->nextJumps.size();
+		move->nextJumpChosen = move->nextJumps.at(num);
 	}
 	return move;
 }
 
 Move *Player::getChoice(vector<Move*> &moves){
 	printMoves(moves);
-	char movec;
-	int move;
+	string movec;
+	int movenum;
 	do{
 		cin>>movec;
-		move = movec - '0';
+		movenum = atoi(movec.c_str());
+	}while(movenum>moves.size() || movenum<1);
 
-
-	}while(move>moves.size());
-	return moves.at(move-1);
+	Move *move = moves.at(movenum-1);
+	if(!moves.at(movenum-1)->nextJumps.empty()){
+		if(move->nextJumps.size()>1){
+			cout<<endl;
+			move->nextJumpChosen = getChoice(move->nextJumps);
+		} else move->nextJumpChosen = move->nextJumps.at(0);
+	}
+	return move;
 }
 
 void Player::printMoves(vector<Move*> &moves){
@@ -35,8 +44,9 @@ void Player::printMoves(vector<Move*> &moves){
 	int i = 1;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		move = *it;
-		cout<<i;
+		cout<<i<<": ";
 		move->print();
+		cout<<endl;
 		i++;
 	}
 	cout<<endl;

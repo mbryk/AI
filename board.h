@@ -17,7 +17,8 @@ public:
 	int makeMove(Move*); // returns "Successful?"
 
 private:
-	Square *square[8][8];
+	Square *square[8][4];
+	void printRow(int);
 	void getAdjacents(Square*, vector<Square*>&, bool);
 	void getJumps(Square*, vector<Move*>&);
 	void getNonJumps(Square*, vector<Move*>&);

@@ -13,6 +13,8 @@ public:
 	std::vector<Move*> nextJumps;
 	Move(Square*, Square*);
 	void print();
+private:
+	int columnize(Square*);
 };
 
 #endif	/* MOVE_H */

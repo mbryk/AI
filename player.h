@@ -3,6 +3,8 @@
 #include "move.h"
 #include <vector>
 #include <iostream>
+#include <cstdlib>
+#include <string>
 
 class Player{
 public:
@@ -10,7 +12,7 @@ public:
 	int color;
 	int timelim;
 
-	Player();
+	Player(int);
 	Move *move(std::vector<Move*>&);
 
 private:

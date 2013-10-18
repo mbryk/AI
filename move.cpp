@@ -15,22 +15,24 @@ void Move::print(){
 	if(jumped != NULL) text = "] ^-> [";
 	cout<<"["
 		<<origin->x<<"."
-		<<origin->y
+		<<columnize(origin)
 		<<text
 		<<dest->x<<"."
-		<<dest->y
+		<<columnize(dest)
 		<<"]";
 	if(!nextJumps.empty()){
 		for (vector<Move*>::iterator it = nextJumps.begin() ; it != nextJumps.end(); ++it){
 			mv = *it;
 			cout<<endl<<"\t"<<
 				"["<<
-				mv->origin->x << "." << mv->origin->y <<
+				mv->origin->x << "." << columnize(mv->origin) <<
 				"] ^-> ["<<
-				mv->dest->x << "." << mv->dest->y <<
+				mv->dest->x << "." << columnize(mv->dest) <<
 				"]";
 		}
 	}
-	cout<<endl;
+}
 
+int Move::columnize(Square *sq){
+	return sq->y*2 + 1 - (sq->x%2);
 }
