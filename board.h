@@ -14,7 +14,7 @@ public:
 	Board(char*);
 	void print();
 	void getLegalMoves(int, vector<Move*>&);
-	bool makeMove(Move*); // returns "Successful?"
+	int makeMove(Move*); // returns "Successful?"
 
 private:
 	Square *square[8][8];
@@ -23,6 +23,9 @@ private:
 	void getNonJumps(Square*, vector<Move*>&);
 	bool isValid(int, int);
 	Square *getNextSquare(Square*,Square*);
+	void emptySquare(Square*);
+	bool checkKing(Square*);
+	int terminalTest(int);
 	Board *copy();
 };
 

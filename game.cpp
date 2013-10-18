@@ -1,5 +1,4 @@
 #include "game.h"
-using namespace std;
 
 Game::Game(char *state, int player_types[2]){
 	board = new Board(state);
@@ -11,12 +10,17 @@ Game::Game(char *state, int player_types[2]){
 }
 
 void Game::play(int turn){
-	while(1){
-		board->print();
-		turn = 1-turn;
+	int over;
+	board->print(); //Initial Print
+	while(!over){
 		vector<Move*> moves;
 		board->getLegalMoves(players[turn]->color, moves);
 		Move *move = players[turn]->move(moves);
-		board->makeMove(move);
+		over = board->makeMove(move);
+		board->print();
+		turn = 1-turn;
 	}
+	char *colors[2] = {"Red","Black"};
+	std::cout<<"Game Over! "<<colors[over-1]<<" wins!"<<endl;
+
 }

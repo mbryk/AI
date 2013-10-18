@@ -9,18 +9,35 @@ Move *Player::move(vector<Move*> &moves){
 }
 
 Move *Player::chooseBest(vector<Move*> &moves){
-	return moves.at(0);
+	printMoves(moves);
+	Move *move = moves.at(0);
+	if(!move->nextJumps.empty()){
+		move->nextJumpChosen = move->nextJumps.at(0);
+	}
+	return move;
 }
 
 Move *Player::getChoice(vector<Move*> &moves){
 	printMoves(moves);
-	int movenum;
-	cin>>movenum;
-	return moves.at(movenum);
+	char movec;
+	int move;
+	do{
+		cin>>movec;
+		move = movec - '0';
+
+
+	}while(move>moves.size());
+	return moves.at(move-1);
 }
 
 void Player::printMoves(vector<Move*> &moves){
-	for(int i=0;i<sizeof(moves); i++){
-		moves[i]->print();
+	Move *move;
+	int i = 1;
+	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
+		move = *it;
+		cout<<i;
+		move->print();
+		i++;
 	}
+	cout<<endl;
 }

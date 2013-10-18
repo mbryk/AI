@@ -21,9 +21,10 @@ int main(int argc, char *argv[]){
 		}
 	}
 	Game *game = new Game(state, players);
-	int turn;	
-	cout<<"Whose turn is it?"<<endl<<"0:Red, 1:Black"<<endl;
-	cin>>turn;
+	char turnc;
+	cout<<"Whose turn is it?"<<endl<<"1:Red, 2:Black"<<endl;
+	cin>>turnc;
+	int turn = turnc - '0' - 1;
 	game->play(turn);	
 
 	return 0;

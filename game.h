@@ -4,6 +4,7 @@
 #include "player.h"
 #include "move.h"
 #include <vector>
+#include <iostream>
 
 class Game{
 public:

@@ -9,8 +9,8 @@
 class Move{
 public:
 	Square *origin, *dest, *jumped;
-	std::vector<Move*> nextJumps;
 	Move *nextJumpChosen;
+	std::vector<Move*> nextJumps;
 	Move(Square*, Square*);
 	void print();
 };

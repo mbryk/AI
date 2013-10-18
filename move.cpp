@@ -4,7 +4,9 @@ using namespace std;
 Move::Move(Square *origin_s, Square *dest_s){
 	origin = origin_s;
 	dest = dest_s;	
-	jumped = NULL;
+
+	jumped = NULL; //INITIALIZED
+	nextJumpChosen = NULL; //INITIALIZED
 }
 
 void Move::print(){
@@ -12,10 +14,10 @@ void Move::print(){
 	string text = "] -> [";
 	if(jumped != NULL) text = "] ^-> [";
 	cout<<"["
-		<<origin->x
+		<<origin->x<<"."
 		<<origin->y
 		<<text
-		<<dest->x
+		<<dest->x<<"."
 		<<dest->y
 		<<"]";
 	if(!nextJumps.empty()){
@@ -23,9 +25,9 @@ void Move::print(){
 			mv = *it;
 			cout<<endl<<"\t"<<
 				"["<<
-				mv->origin->x << mv->origin->y <<
+				mv->origin->x << "." << mv->origin->y <<
 				"] ^-> ["<<
-				mv->dest->x << mv->origin->y <<
+				mv->dest->x << "." << mv->dest->y <<
 				"]";
 		}
 	}
