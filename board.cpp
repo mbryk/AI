@@ -5,7 +5,7 @@ using namespace std;
 Board::Board(char *state){
 	//if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
 	
-	if(!state) state = "1111.1111.-11-.1--1.2-2-.2-2-.2222.2222";
+	if(!state) state = "1111.1111.-112.----.2---.2-2-.2-22.2222";
 	
 	
 	int color, place;
@@ -148,7 +148,7 @@ Square *Board::getNextSquare(Square *origin,Square *jumped){
 	return isValid(row, col)?square[row][col]:NULL;
 }
 
-int Board::makeMove(Move *move){ 
+bool Board::makeMove(Move *move){ 
 	Square *dest = square[move->dest->x][move->dest->y];
 	dest->occupied = 1;
 	dest->color = square[move->origin->x][move->origin->y]->color;
@@ -158,7 +158,7 @@ int Board::makeMove(Move *move){
 	if(move->jumped != NULL){
 		emptySquare(square[move->jumped->x][move->jumped->y]);
 		if(move->nextJumpChosen!=NULL)
-			makeMove(move->nextJumpChosen);
+			return makeMove(move->nextJumpChosen);
 	}
 	return terminalTest(dest->color);
 }
@@ -178,15 +178,15 @@ bool Board::checkKing(Square *sq){
 	return sq->king;
 }
 
-int Board::terminalTest(int color){
+bool Board::terminalTest(int color){ //True = GAME OVER
 	vector<Square*> myPieces;
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
 			if(square[row][col]->occupied && square[row][col]->color!=color) 
-				return 0;
+				return false;
 		}
 	}
-	return color;
+	return true;
 }
 
 Board* Board::copy(){
@@ -204,19 +204,43 @@ Board* Board::copy(){
 	return new Board(state);	
 }
 
-void Board::assignVals(vector<Move*> &moves, int color){
-	Move *move;
-	Board *boardtmp;
+Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably combine with getLegalMoves
+	Move *move, *bestMove;
+	int utility, bestUtility;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		move = *it;
-		boardtmp = copy();
-		boardtmp->makeMove(move);
-		if(!move->nextJumps.empty()){
-			boardtmp->assignVals(move->nextJumps, color);
-		} else {
-			move->value = boardtmp->evaluateBoard(color);
+		utility = miniMaxVal(move, depth, true, color);
+		if(utility>bestUtility){
+			bestUtility = utility;
+			bestMove = move;
 		}
 	}
+	return bestMove;
+}
+
+int Board::miniMaxVal(Move *move, int depth, bool turn, int color){ //Turn is true for MAX
+	if(!depth||terminalTest(color))
+		return evaluateBoard(color);
+	if(!move->nextJumps.empty()){
+		move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
+	}
+	Move *mv;
+	int utility, bestUtility;
+	Board *boardtmp;
+
+	boardtmp = copy();
+	boardtmp->makeMove(move);
+	vector<Move*> moves;
+	boardtmp->getLegalMoves(5-turn, moves); 
+	
+	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
+		mv = *it;
+		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, 3-color);
+		if((turn && utility>bestUtility)||(!turn && utility<bestUtility)){
+			bestUtility = utility;
+		}
+	}
+	return bestUtility;
 }
 
 int Board::evaluateBoard(int color){

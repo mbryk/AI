@@ -5,20 +5,16 @@ Player::Player(int ptype){
 	type = ptype;
 }
 
-Move *Player::move(vector<Move*> &moves){
-	return (type)?getChoice(moves):chooseBest(moves);
-}
-
 Move *Player::chooseBest(vector<Move*> &moves){ //For Computer
 	if(prints) printMoves(moves); //testing
 	int val;
-	int bestVal = 0;
+	int bestVal = -12*1000;
 	int i = 1;
 	Move *move, *bestMove;
 
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		move = *it;
-		val = evaluateMove(move); 
+		val = 5;
 		cout<<i<<": "<<val<<endl;
 		if(val>bestVal){
 			bestMove = move;
@@ -35,14 +31,6 @@ Move *Player::chooseBest(vector<Move*> &moves){ //For Computer
 	}
 */
 	return bestMove;
-}
-
-int Player::evaluateMove(Move *move){
-	if(!move->nextJumps.empty()){	
-		move->nextJumpChosen = chooseBest(move->nextJumps);
-		return evaluateMove(move->nextJumpChosen);
-	}
-	return move->value;
 }
 
 Move *Player::getChoice(vector<Move*> &moves){ //For Dumb Player

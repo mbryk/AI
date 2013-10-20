@@ -9,27 +9,36 @@ Game::Game(char *state, int player_types[2], bool isprints){
 		players[i]->color = i+1;
 		players[i]->prints = isprints; //testing
 	}
+	time_start = time(0);
 }
 
 void Game::play(int turn){
-	int over;
+	int over, color, time_diff, depth;
+	Move *move;
 	board->print(); //Initial Print
-	while(!over){
+	while(1){
+		depth = 1;
+		color = players[turn]->color;
 		vector<Move*> moves;
-		board->getLegalMoves(players[turn]->color, moves);
-		if(moves.empty()){
-			over = 2-turn;
-			break;
+		board->getLegalMoves(color, moves);
+		if(!players[turn]->type){ // For the computer
+			//while(time_diff<(.5*players[turn]->time_limit)){
+			//while(time_diff<(.5*5000)){
+			while(depth<5){
+				move = board->getBestMove(color, depth++, moves); //To all moves w/o nextJumps().
+				time_diff = time(0)-time_start;
+			}
+		} else {
+			move = players[turn]->getChoice(moves);
 		}
-		if(!players[turn]->type) 
-			board->assignVals(moves, players[turn]->color); //To all moves w/o nextJumps().
-		Move *move = players[turn]->move(moves);
-		over = board->makeMove(move);
+		if(!board->makeMove(move)) //FALSE = GAMEOVER
+			break;
+		
 		if(prints) board->print();
 		turn = 1-turn;
 	}
 	string colors[2] = {"Red","Black"};
 	if(!prints) board->print();
-	std::cout<<"Game Over! "<<colors[over-1]<<" wins!"<<endl<<endl;
+	std::cout<<"Game Over! "<<colors[color-1]<<" wins!"<<endl<<endl;
 
 }

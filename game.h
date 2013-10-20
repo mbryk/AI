@@ -17,6 +17,7 @@ private:
 	bool prints;
 	Board *board;
 	Player *players[];
+	time_t time_start;
 }; 
 
 #endif	/* GAME_H */

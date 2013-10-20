@@ -14,12 +14,11 @@ public:
 	bool prints; //testing
 
 	Player(int);
-	Move *move(std::vector<Move*>&);
+	//Move *move(std::vector<Move*>&);
+	Move *getChoice(std::vector<Move*>&);
 
 private:
-	Move *chooseBest(std::vector<Move*>&);
-	int evaluateMove(Move*);
-	Move *getChoice(std::vector<Move*>&);
+	Move *chooseBest(std::vector<Move*>&);	
 	void printMoves(std::vector<Move*>&);
 };
 

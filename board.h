@@ -14,8 +14,8 @@ public:
 	Board(char*);
 	void print();
 	void getLegalMoves(int, vector<Move*>&);
-	int makeMove(Move*); // returns "Successful?"
-	void assignVals(vector<Move*>&, int);
+	bool makeMove(Move*); // returns "Game Over"
+	Move *getBestMove(int, int, vector<Move*>&);
 
 private:
 	Square *square[8][4];
@@ -27,8 +27,9 @@ private:
 	Square *getNextSquare(Square*,Square*);
 	void emptySquare(Square*);
 	bool checkKing(Square*);
-	int terminalTest(int);
+	bool terminalTest(int);
 	Board *copy();
+	int miniMaxVal(Move*, int, bool, int);
 	int evaluateBoard(int);
 	int countPieces(int);
 
