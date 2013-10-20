@@ -17,17 +17,17 @@ void Game::play(int turn){
 	Move *move;
 	board->print(); //Initial Print
 	while(1){
-		depth = 1;
+		depth = 0;
 		color = players[turn]->color;
 		vector<Move*> moves;
 		board->getLegalMoves(color, moves);
 		if(!players[turn]->type){ // For the computer
 			//while(time_diff<(.5*players[turn]->time_limit)){
 			//while(time_diff<(.5*5000)){
-			while(depth<5){
+			do{
 				move = board->getBestMove(color, depth++, moves); //To all moves w/o nextJumps().
 				time_diff = time(0)-time_start;
-			}
+			} while(depth<2);
 		} else {
 			move = players[turn]->getChoice(moves);
 		}

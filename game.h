@@ -16,7 +16,7 @@ public:
 private:
 	bool prints;
 	Board *board;
-	Player *players[];
+	Player *players[2];
 	time_t time_start;
 }; 
 

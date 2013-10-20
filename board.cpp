@@ -3,9 +3,9 @@
 using namespace std;
 
 Board::Board(char *state){
-	//if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
+	if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
 	
-	if(!state) state = "1111.1111.-112.----.2---.2-2-.2-22.2222";
+//	if(!state) state = "1111.1111.-112.----.2---.2-2-.2-22.2222";
 	
 	
 	int color, place;
@@ -160,7 +160,7 @@ bool Board::makeMove(Move *move){
 		if(move->nextJumpChosen!=NULL)
 			return makeMove(move->nextJumpChosen);
 	}
-	return terminalTest(dest->color);
+	return terminalTest(dest->color); //GAME OVER = FALSE
 }
 
 void Board::emptySquare(Square *sq){
@@ -178,15 +178,15 @@ bool Board::checkKing(Square *sq){
 	return sq->king;
 }
 
-bool Board::terminalTest(int color){ //True = GAME OVER
+bool Board::terminalTest(int color){ //False = GAME OVER
 	vector<Square*> myPieces;
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
 			if(square[row][col]->occupied && square[row][col]->color!=color) 
-				return false;
+				return true;
 		}
 	}
-	return true;
+	return false;
 }
 
 Board* Board::copy(){
@@ -206,7 +206,8 @@ Board* Board::copy(){
 
 Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably combine with getLegalMoves
 	Move *move, *bestMove;
-	int utility, bestUtility;
+	int utility;
+	int bestUtility = -1;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		move = *it;
 		utility = miniMaxVal(move, depth, true, color);
@@ -219,8 +220,9 @@ Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably
 }
 
 int Board::miniMaxVal(Move *move, int depth, bool turn, int color){ //Turn is true for MAX
-	if(!depth||terminalTest(color))
+	if(!(depth && terminalTest(color) )){
 		return evaluateBoard(color);
+	}
 	if(!move->nextJumps.empty()){
 		move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
 	}
