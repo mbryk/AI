@@ -16,10 +16,10 @@ public:
 	Player(int);
 	//Move *move(std::vector<Move*>&);
 	Move *getChoice(std::vector<Move*>&);
-
+	void printMoves(std::vector<Move*>&);
 private:
 	Move *chooseBest(std::vector<Move*>&);	
-	void printMoves(std::vector<Move*>&);
+	
 };
 
 #endif	/* PLAYER_H */

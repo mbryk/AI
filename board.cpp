@@ -4,8 +4,7 @@ using namespace std;
 
 Board::Board(char *state){
 	if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
-	
-//	if(!state) state = "1111.1111.-112.----.2---.2-2-.2-22.2222";
+//	if(!state) state = "1111.1-11.1-11.1---.--1-.222-.2222.2222";
 	
 	
 	int color, place;
@@ -57,7 +56,7 @@ void Board::printRow(int offset){ //Offset = 0 => Red First
 	cout<<"\033[0m"<<endl;
 }
 
-void Board::getLegalMoves(int color, vector<Move*> &moves){
+bool Board::getLegalMoves(int color, vector<Move*> &moves){ //FALSE = GAME OVER
 	vector<Square*> myPieces;
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
@@ -72,6 +71,7 @@ void Board::getLegalMoves(int color, vector<Move*> &moves){
 	if(moves.empty()) 
 		for (vector<Square*>::iterator it = myPieces.begin() ; it != myPieces.end(); ++it)
 			getNonJumps(*it, moves);
+	return !moves.empty();
 }
 
 void Board::getJumps(Square *origin, vector<Move*> &moves){
@@ -207,10 +207,12 @@ Board* Board::copy(){
 Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably combine with getLegalMoves
 	Move *move, *bestMove;
 	int utility;
-	int bestUtility = -1;
+	int bestUtility = -10000000;
+
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		move = *it;
 		utility = miniMaxVal(move, depth, true, color);
+		move->value = utility;
 		if(utility>bestUtility){
 			bestUtility = utility;
 			bestMove = move;
@@ -227,13 +229,14 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int color){ //Turn is tr
 		move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
 	}
 	Move *mv;
-	int utility, bestUtility;
+	int utility;
+	int bestUtility = turn?-10000000:10000000;
 	Board *boardtmp;
 
 	boardtmp = copy();
 	boardtmp->makeMove(move);
 	vector<Move*> moves;
-	boardtmp->getLegalMoves(5-turn, moves); 
+	boardtmp->getLegalMoves(3-color, moves); 
 	
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		mv = *it;

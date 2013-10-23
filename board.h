@@ -13,7 +13,7 @@ class Board{
 public:
 	Board(char*);
 	void print();
-	void getLegalMoves(int, vector<Move*>&);
+	bool getLegalMoves(int, vector<Move*>&);
 	bool makeMove(Move*); // returns "Game Over"
 	Move *getBestMove(int, int, vector<Move*>&);
 
