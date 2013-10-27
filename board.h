@@ -29,7 +29,7 @@ private:
 	bool checkKing(Square*);
 	bool terminalTest(int);
 	Board *copy();
-	int miniMaxVal(Move*, int, bool, int);
+	int miniMaxVal(Move*, int, bool, int, int, int);
 	int evaluateBoard(int);
 	int countPieces(int);
 

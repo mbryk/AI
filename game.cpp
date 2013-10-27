@@ -17,11 +17,13 @@ void Game::play(int turn){
 	Move *move;
 	board->print(); //Initial Print
 	while(1){
-		depth = 0;
+		depth = 1;
 		color = players[turn]->color;
 		vector<Move*> moves;
-		if(!board->getLegalMoves(color, moves)) 
+		if(!board->getLegalMoves(color, moves)){ 
+			color = 3-color;
 			break;
+		}
 		if(!players[turn]->type){ // For the computer
 			//while(time_diff<(.5*players[turn]->time_limit)){
 			//while(time_diff<(.5*5000)){
@@ -40,7 +42,7 @@ void Game::play(int turn){
 		turn = 1-turn;
 	}
 	string colors[2] = {"Red","Black"};
-	if(!prints) board->print();
+	board->print();
 	std::cout<<"Game Over! "<<colors[color-1]<<" wins!"<<endl<<endl;
 
 }

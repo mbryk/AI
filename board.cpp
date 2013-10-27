@@ -1,11 +1,11 @@
 #include "board.h"
-
+#define MININF -10000000
+#define POSINF 10000000
 using namespace std;
 
 Board::Board(char *state){
 	if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
-//	if(!state) state = "1111.1-11.1-11.1---.--1-.222-.2222.2222";
-	
+	//if(!state) state = "----.----.----.----.----.----.--1-.--22";
 	
 	int color, place;
 	for(int row=0; row<8; row++){
@@ -207,11 +207,10 @@ Board* Board::copy(){
 Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably combine with getLegalMoves
 	Move *move, *bestMove;
 	int utility;
-	int bestUtility = -10000000;
-
+	int bestUtility = MININF;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		move = *it;
-		utility = miniMaxVal(move, depth, true, color);
+		utility = miniMaxVal(move, depth, true, color, MININF-1, POSINF);
 		move->value = utility;
 		if(utility>bestUtility){
 			bestUtility = utility;
@@ -221,27 +220,35 @@ Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably
 	return bestMove;
 }
 
-int Board::miniMaxVal(Move *move, int depth, bool turn, int color){ //Turn is true for MAX
-	if(!(depth && terminalTest(color) )){
-		return evaluateBoard(color);
-	}
+int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, int beta){ //Turn is true for MAX
 	if(!move->nextJumps.empty()){
 		move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
 	}
 	Move *mv;
 	int utility;
-	int bestUtility = turn?-10000000:10000000;
+	int bestUtility = turn?MININF:POSINF;
 	Board *boardtmp;
 
 	boardtmp = copy();
 	boardtmp->makeMove(move);
+
+	if(!(depth-1) || !boardtmp->terminalTest(color))
+		return boardtmp->evaluateBoard(color);
+
 	vector<Move*> moves;
 	boardtmp->getLegalMoves(3-color, moves); 
 	
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		mv = *it;
-		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, 3-color);
-		if((turn && utility>bestUtility)||(!turn && utility<bestUtility)){
+		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, 3-color, alpha, beta);
+		if(turn){
+			beta = min(beta, utility);
+			if(beta<=alpha) return alpha;
+		} else {
+			alpha = max(alpha, utility);
+			if(alpha>=beta) return beta;
+		}
+		if((turn && utility>bestUtility) || (!turn && utility<bestUtility)){
 			bestUtility = utility;
 		}
 	}
