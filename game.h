@@ -11,13 +11,12 @@
 
 class Game{
 public:
-	Game(char*, int player_types[2], bool);
+	Game(char*, int player_types[2], double t_limits[2], bool, bool);
 	void play(int);
 private:
 	bool prints;
 	Board *board;
 	Player *players[2];
-	time_t time_start;
 }; 
 
 #endif	/* GAME_H */

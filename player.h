@@ -10,7 +10,7 @@ class Player{
 public:
 	bool type; //0=Comp, 1=Human
 	int color;
-	int timelim;
+	double t_lim;
 	bool prints; //testing
 
 	Player(int);

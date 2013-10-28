@@ -23,7 +23,7 @@ Board::Board(char *state){
 
 void Board::print(){
 	//0=Black, 1=Red Piece, 2=Black Piece, 3=Red King, 4=Black King, 5=Red
-	const char *shapes[6] = {"\033[40m     ","\033[40m \033[43m   \033[40m ","\033[40m \033[45m   \033[40m ", "\033[40m \033[43m K \033[40m ","\033[40m \033[45m K \033[40m ","\033[41m     "};
+	const char *shapes[6] = {"\033[40m     ","\033[40m \033[43m   \033[40m ","\033[40m \033[45m   \033[40m ", "\033[40m \033[43;1m K \033[40m ","\033[40m \033[45;1m K \033[40m ","\033[41m     "};
 	int color;
 	cout<<"     0    1    2    3    4    5    6    7"<<endl;
 	for(int row=7; row>=0; row--){
@@ -201,14 +201,20 @@ Board* Board::copy(){
 		}
 		state[place+1] = '.';
 	}
-	return new Board(state);	
+	Board *board;
+	board = new Board(state);
+	board->debugPrint = debugPrint;
+	return board;	
 }
 
 Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably combine with getLegalMoves
 	Move *move, *bestMove;
 	int utility;
+	int i = 1;
 	int bestUtility = MININF;
+	if(debugPrint) cout<<"DEPTH "<<depth<<endl;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
+		if(debugPrint) cout<<"\tMove "<<i++<<": ";
 		move = *it;
 		utility = miniMaxVal(move, depth, true, color, MININF-1, POSINF);
 		move->value = utility;
@@ -222,42 +228,64 @@ Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably
 
 int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, int beta){ //Turn is true for MAX
 	if(!move->nextJumps.empty()){
-		move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
+		if(debugPrint) {
+			debugPrint = false;
+			move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
+			debugPrint = true;
+			cout<<endl<<"bestMoveChosen: ";
+			move->nextJumpChosen->print();
+			cout<<endl;
+		} else move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
 	}
-	Move *mv;
-	int utility;
-	int bestUtility = turn?MININF:POSINF;
+	
 	Board *boardtmp;
-
 	boardtmp = copy();
 	boardtmp->makeMove(move);
+	if(!(depth-1) || !boardtmp->terminalTest(color)){
+		if(debugPrint){
+			int val = boardtmp->evaluateBoard(color);
+			move->print();
+			cout<<"--Bval: "<<val<<endl;
+			return val;
+		}else {
+			return boardtmp->evaluateBoard(color);
+		}
+	}
 
-	if(!(depth-1) || !boardtmp->terminalTest(color))
-		return boardtmp->evaluateBoard(color);
-
+	Move *mv;
+	int utility;
+	int bestUtility = turn?POSINF:MININF;
 	vector<Move*> moves;
-	boardtmp->getLegalMoves(3-color, moves); 
-	
+
+	if(turn) boardtmp->getLegalMoves(3-color, moves); 
+	else boardtmp->getLegalMoves(color, moves);
+	if(debugPrint) cout<<endl<<"---------"<<endl;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		mv = *it;
-		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, 3-color, alpha, beta);
+		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, color, alpha, beta);
 		if(turn){
 			beta = min(beta, utility);
-			if(beta<=alpha) return alpha;
+			//if(beta<=alpha) return alpha;
 		} else {
 			alpha = max(alpha, utility);
-			if(alpha>=beta) return beta;
+			//if(alpha>=beta) return beta;
 		}
-		if((turn && utility>bestUtility) || (!turn && utility<bestUtility)){
+		if((turn && utility<bestUtility) || (!turn && utility>bestUtility)){
 			bestUtility = utility;
 		}
 	}
+	if(debugPrint){
+		cout<<"---------"<<endl;
+		move->print();
+		cout<<" ---U="<<bestUtility<<endl;
+	}
+
 	return bestUtility;
 }
 
 int Board::evaluateBoard(int color){
 	int pieceDiff = (countPieces(color) - countPieces(3-color));
-	return pieceDiff*1000 + rand()%1000;
+	return pieceDiff*1000 + rand()%200;
 }
 
 int Board::countPieces(int color){

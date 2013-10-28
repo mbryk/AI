@@ -12,6 +12,8 @@ class Board{
 
 public:
 	Board(char*);
+	bool debugPrint;
+	time_t t_start;
 	void print();
 	bool getLegalMoves(int, vector<Move*>&);
 	bool makeMove(Move*); // returns "Game Over"
