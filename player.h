@@ -12,6 +12,7 @@ public:
 	int color;
 	double t_lim;
 	bool prints; //testing
+	int hnum;
 
 	Player(int);
 	//Move *move(std::vector<Move*>&);

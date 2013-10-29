@@ -207,7 +207,7 @@ Board* Board::copy(){
 	return board;	
 }
 
-Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably combine with getLegalMoves
+Move *Board::getBestMove(int color, int depth, vector<Move*> &moves, int hnum){ //probably combine with getLegalMoves
 	Move *move, *bestMove;
 	int utility;
 	int i = 1;
@@ -216,7 +216,7 @@ Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		if(debugPrint) cout<<"\tMove "<<i++<<": ";
 		move = *it;
-		utility = miniMaxVal(move, depth, true, color, MININF-1, POSINF);
+		utility = miniMaxVal(move, depth, true, color, MININF-1, POSINF, hnum);
 		move->value = utility;
 		if(utility>bestUtility){
 			bestUtility = utility;
@@ -226,16 +226,16 @@ Move *Board::getBestMove(int color, int depth, vector<Move*> &moves){ //probably
 	return bestMove;
 }
 
-int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, int beta){ //Turn is true for MAX
+int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, int beta, int hnum){ //Turn is true for MAX
 	if(!move->nextJumps.empty()){
 		if(debugPrint) {
 			debugPrint = false;
-			move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
+			move->nextJumpChosen = getBestMove(color, depth, move->nextJumps, hnum);
 			debugPrint = true;
 			cout<<endl<<"bestMoveChosen: ";
 			move->nextJumpChosen->print();
 			cout<<endl;
-		} else move->nextJumpChosen = getBestMove(color, depth, move->nextJumps);
+		} else move->nextJumpChosen = getBestMove(color, depth, move->nextJumps, hnum);
 	}
 	
 	Board *boardtmp;
@@ -243,12 +243,12 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, in
 	boardtmp->makeMove(move);
 	if(!(depth-1) || !boardtmp->terminalTest(color)){
 		if(debugPrint){
-			int val = boardtmp->evaluateBoard(color);
+			int val = boardtmp->evaluateBoard(color, hnum);
 			move->print();
 			cout<<"--Bval: "<<val<<endl;
 			return val;
 		}else {
-			return boardtmp->evaluateBoard(color);
+			return boardtmp->evaluateBoard(color, hnum);
 		}
 	}
 
@@ -262,13 +262,13 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, in
 	if(debugPrint) cout<<endl<<"---------"<<endl;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		mv = *it;
-		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, color, alpha, beta);
+		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, color, alpha, beta, hnum);
 		if(turn){
 			beta = min(beta, utility);
-			//if(beta<=alpha) return alpha;
+			if(beta<=alpha) return alpha;
 		} else {
 			alpha = max(alpha, utility);
-			//if(alpha>=beta) return beta;
+			if(alpha>=beta) return beta;
 		}
 		if((turn && utility<bestUtility) || (!turn && utility>bestUtility)){
 			bestUtility = utility;
@@ -283,17 +283,53 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, in
 	return bestUtility;
 }
 
-int Board::evaluateBoard(int color){
+int Board::evaluateBoard(int color, int hnum){
+	int val;
+	switch(hnum){
+		case 2:
+			val = heuristic2(color);
+			break;
+		default:
+			val = heuristic1(color);
+			break;
+	}
+	return val;
+}
+
+int Board::heuristic1(int color){
 	int pieceDiff = (countPieces(color) - countPieces(3-color));
 	return pieceDiff*1000 + rand()%200;
 }
 
-int Board::countPieces(int color){
+int Board::heuristic2(int color){
+	int pieces = countPieces(color) - countPieces(3-color);
+	int kings = countPieces(color, true) - countPieces(3-color, true);
+	int sides = countPositions(color) - countPositions(3-color);
+	return pieces*150 + kings*60 + sides*50 + rand()%20;
+}
+
+int Board::countPieces(int color, bool king){
 	int count = 0;
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
-			if(square[row][col]->occupied && square[row][col]->color==color) 
+			if(square[row][col]->occupied && square[row][col]->color==color){ 
+				if(king && !square[row][col]->king) continue;
 				count++;
+			}
+		}
+	}
+	return count;
+}
+
+int Board::countPositions(int color, int weight){
+	int count=0;
+	for(int row=0; row<8; row++){
+		int a = (color==1)?row:7-row;
+		a*=weight;
+		for(int col=0; col<4; col++){
+			if(square[row][col]->occupied && square[row][col]->color==color){
+				count += a;
+			}
 		}
 	}
 	return count;

@@ -17,7 +17,7 @@ public:
 	void print();
 	bool getLegalMoves(int, vector<Move*>&);
 	bool makeMove(Move*); // returns "Game Over"
-	Move *getBestMove(int, int, vector<Move*>&);
+	Move *getBestMove(int, int, vector<Move*>&, int);
 
 private:
 	Square *square[8][4];
@@ -31,9 +31,12 @@ private:
 	bool checkKing(Square*);
 	bool terminalTest(int);
 	Board *copy();
-	int miniMaxVal(Move*, int, bool, int, int, int);
-	int evaluateBoard(int);
-	int countPieces(int);
+	int miniMaxVal(Move*, int, bool, int, int, int, int);
+	int evaluateBoard(int, int);
+	int heuristic1(int);
+	int heuristic2(int);
+	int countPieces(int, bool king = false);
+	int countPositions(int, int weight = 1);
 
 };
 

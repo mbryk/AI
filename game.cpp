@@ -1,6 +1,6 @@
 #include "game.h"
 
-Game::Game(char *state, int player_types[2], double t_limits[2], bool isprints, bool debugPrint){
+Game::Game(char *state, int player_types[2], double t_limits[2], bool isprints, bool debugPrint, int hnum[2]){
 	board = new Board(state);
 	board->debugPrint = debugPrint;
 	srand(time(NULL));
@@ -9,6 +9,7 @@ Game::Game(char *state, int player_types[2], double t_limits[2], bool isprints, 
 		players[i] = new Player(player_types[i]);
 		players[i]->color = i+1;
 		players[i]->t_lim = t_limits[i];
+		players[i]->hnum = hnum[i];
 		players[i]->prints = isprints; //testing
 
 	}
@@ -33,11 +34,11 @@ void Game::play(int turn){
 		}
 		if(!players[turn]->type){ // For the computer
 			do{
-				move = board->getBestMove(color, depth++, moves); //To all moves w/o nextJumps().
+				move = board->getBestMove(color, depth++, moves, players[turn]->hnum); //To all moves w/o nextJumps().
 				t_diff = difftime(time(0), t_start);
 				//std::cout<<"d-"<<depth<<"t-"<<t_diff<<";";
-			} while(t_diff<(.5*players[turn]->t_lim));
-			//} while(depth<4);
+			//} while(t_diff<(.5*players[turn]->t_lim));
+			} while(depth<4);
 			players[turn]->printMoves(moves);
 		} else {
 			move = players[turn]->getChoice(moves);
