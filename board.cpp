@@ -19,6 +19,8 @@ Board::Board(char *state){
 			}
 		}
 	}
+
+	end_section = false;
 }
 
 void Board::print(){
@@ -174,6 +176,8 @@ bool Board::checkKing(Square *sq){
 		if( (!sq->x && sq->color==2) || (sq->x==7 && sq->color==1)){
 			sq->king = true;
 		}
+		if(countPieces(1,true)==countPieces(1) && countPieces(2,true)==countPieces(2))
+			end_section = true;
 	}
 	return sq->king;
 }
@@ -204,6 +208,7 @@ Board* Board::copy(){
 	Board *board;
 	board = new Board(state);
 	board->debugPrint = debugPrint;
+	board->end_section = end_section;
 	return board;	
 }
 
@@ -259,16 +264,16 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int color, int alpha, in
 
 	if(turn) boardtmp->getLegalMoves(3-color, moves); 
 	else boardtmp->getLegalMoves(color, moves);
-	if(debugPrint) cout<<endl<<"---------"<<endl;
+	if(debugPrint) cout<<endl<<"||||||||||||"<<endl;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		mv = *it;
 		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, color, alpha, beta, hnum);
 		if(turn){
 			beta = min(beta, utility);
-			if(beta<=alpha) return alpha;
+			if(beta<=alpha) { if(debugPrint) {cout<<"PRUNED1 ----(";move->print();cout<<")";} return alpha;}
 		} else {
 			alpha = max(alpha, utility);
-			if(alpha>=beta) return beta;
+			if(alpha>=beta) { if(debugPrint) {cout<<"PRUNED2 ----(";move->print();cout<<")";} return beta;}
 		}
 		if((turn && utility<bestUtility) || (!turn && utility>bestUtility)){
 			bestUtility = utility;
@@ -287,25 +292,29 @@ int Board::evaluateBoard(int color, int hnum){
 	int val;
 	switch(hnum){
 		case 2:
-			val = heuristic2(color);
+			val = h2(color);
+			break;
+		case 3:
+			val = h3(color);
 			break;
 		default:
-			val = heuristic1(color);
+			val = h1(color);
 			break;
 	}
 	return val;
 }
 
-int Board::heuristic1(int color){
+int Board::h1(int color){
 	int pieceDiff = (countPieces(color) - countPieces(3-color));
 	return pieceDiff*1000 + rand()%200;
 }
 
-int Board::heuristic2(int color){
+int Board::h2(int color){
 	int pieces = countPieces(color) - countPieces(3-color);
 	int kings = countPieces(color, true) - countPieces(3-color, true);
-	int sides = countPositions(color) - countPositions(3-color);
-	return pieces*150 + kings*60 + sides*50 + rand()%20;
+	//int pos = countPositions(color) - countPositions(3-color);
+	int jumps = countJumps(color) - countJumps(3-color);
+	return pieces*500 + kings*300 + jumps*200 + rand()%30;
 }
 
 int Board::countPieces(int color, bool king){
@@ -321,6 +330,23 @@ int Board::countPieces(int color, bool king){
 	return count;
 }
 
+int Board::countJumps(int color){
+	vector<Move*> moves;
+	vector<Square*> myPieces;
+
+	for(int row=0; row<8; row++){
+		for(int col=0; col<4; col++){
+			if(square[row][col]->occupied && square[row][col]->color==color) 
+				myPieces.push_back(square[row][col]);
+		}
+	}
+
+	for (vector<Square*>::iterator it = myPieces.begin() ; it != myPieces.end(); ++it){
+			getJumps(*it, moves);
+	}	
+	return moves.size();
+}
+
 int Board::countPositions(int color, int weight){
 	int count=0;
 	for(int row=0; row<8; row++){
@@ -333,4 +359,60 @@ int Board::countPositions(int color, int weight){
 		}
 	}
 	return count;
+}
+int Board::h3(int color){
+	if(end_section) return (h3end(color)-h3end(3-color));
+	else return (h3begin(color)-h3begin(3-color));
+}
+
+int Board::h3begin(int color){
+	int a, col;
+	int count = 0;
+	for(int row=0; row<8; row++){
+		a = (color==1)?row:7-row; //rows from bottom
+		for(col=0; col<4; col++){
+			if(square[row][col]->occupied && square[row][col]->color==color){ 
+				//ADD PIECE VAL
+				if(square[row][col]->king) count+=10;
+				//ADD POS VAL
+				else if(a<4) count+=5;
+				else count+=7;
+
+				//ADD SIDES
+				if(!col || col==3) count+=3;
+			}
+		}
+	}
+	a = color==1?0:7; int br = 0;
+	for(col=0;col<4;col++) {
+		if(square[a][col]->occupied) continue; 
+		if(col==3) count+=10;
+	}
+	return count*100 + rand()%20;
+}
+int Board::h3end(int color){
+	int dist = 0;
+	for(int row=0; row<8; row++){
+		for(int col=0; col<4; col++){
+			if(square[row][col]->occupied && square[row][col]->color==color){ 
+				dist += distances(row, col, 3-color);
+			}
+		}
+	}
+	int k = countPieces(color); int k2 = countPieces(3-color);
+	int rn = rand()%20;
+	if(k==k2) return rn;
+	if(k<k2) return dist*-100 + rn;
+	return dist*100 + rn;
+}
+
+int Board::distances(int r, int c, int color){
+	int dist = 0;
+	for(int row=0; row<8; row++){
+		for(int col=0; col<4; col++){
+			if(square[row][col]->occupied && square[row][col]->color==color){ 
+				dist += abs(row-r) + abs(col-c)/2;
+			}
+		}
+	}	
 }

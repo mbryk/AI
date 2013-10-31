@@ -21,6 +21,7 @@ public:
 
 private:
 	Square *square[8][4];
+	bool end_section;
 	void printRow(int);
 	void getAdjacents(Square*, vector<Square*>&, bool);
 	void getJumps(Square*, vector<Move*>&);
@@ -33,10 +34,15 @@ private:
 	Board *copy();
 	int miniMaxVal(Move*, int, bool, int, int, int, int);
 	int evaluateBoard(int, int);
-	int heuristic1(int);
-	int heuristic2(int);
+	int h1(int);
+	int h2(int);
+	int h3(int);
+	int h3begin(int);
+	int h3end(int);
+	int distances(int,int,int);
 	int countPieces(int, bool king = false);
 	int countPositions(int, int weight = 1);
+	int countJumps(int);
 
 };
 

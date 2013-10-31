@@ -37,8 +37,8 @@ void Game::play(int turn){
 				move = board->getBestMove(color, depth++, moves, players[turn]->hnum); //To all moves w/o nextJumps().
 				t_diff = difftime(time(0), t_start);
 				//std::cout<<"d-"<<depth<<"t-"<<t_diff<<";";
-			//} while(t_diff<(.5*players[turn]->t_lim));
-			} while(depth<4);
+			} while(t_diff<(.4*players[turn]->t_lim));
+			//} while(depth<5);
 			players[turn]->printMoves(moves);
 		} else {
 			move = players[turn]->getChoice(moves);
