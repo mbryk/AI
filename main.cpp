@@ -7,7 +7,7 @@ int main(int argc, char *argv[]){
 	//string state = "a";
 	char *state = NULL;
 	int players[2] = {1,0};
-	double t_limits[2] = {5,5};
+	double t_limits[2] = {10,10};
 	int hnum[2] = {1,1};
 	int c = 0;
 	bool prints = true; bool debugPrint = false;
