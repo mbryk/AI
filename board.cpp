@@ -4,8 +4,9 @@
 using namespace std;
 
 Board::Board(char *state){
-	if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
-	//if(!state) state = "----.----.----.----.----.----.--1-.--22";
+	//if(!state) state = "1111.1111.1111.----.----.2222.2222.2222";
+	if(!state) state = "1111.111-.----.1---.-21-.22--.221-.22-2";
+	//if(!state) state = "----.----.3---.-222.----.----.----.---2";
 	
 	int color, place;
 	for(int row=0; row<8; row++){
@@ -86,8 +87,8 @@ void Board::getJumps(Square *origin, vector<Move*> &moves){
 				move = new Move(origin, dest);
 				move->jumped = spot;
 				Board *boardtmp = copy();
-				boardtmp->makeMove(move);
-				boardtmp->getJumps(boardtmp->square[dest->x][dest->y], move->nextJumps); //This is giving me an error, because dest is actually unoccupied.
+				if(boardtmp->makeMove(move))
+					boardtmp->getJumps(boardtmp->square[dest->x][dest->y], move->nextJumps); //This is giving me an error, because dest is actually unoccupied.
 				moves.push_back(move);
 		}
 	}	
@@ -152,13 +153,14 @@ bool Board::makeMove(Move *move){
 	dest->color = square[move->origin->x][move->origin->y]->color;
 	dest->king = square[move->origin->x][move->origin->y]->king;
 	emptySquare(square[move->origin->x][move->origin->y]);
-	checkKing(dest);
+	if(!dest->king) checkKing(dest);
 	if(move->jumped != NULL){
 		emptySquare(square[move->jumped->x][move->jumped->y]);
 		if(move->nextJumpChosen!=NULL)
 			return makeMove(move->nextJumpChosen);
+		return terminalTest(dest->color); //Check terminal test on winning color
 	}
-	return terminalTest(dest->color); //GAME OVER = FALSE
+	return true; //GAME OVER = FALSE
 }
 
 void Board::emptySquare(Square *sq){
@@ -167,14 +169,12 @@ void Board::emptySquare(Square *sq){
 }
 
 bool Board::checkKing(Square *sq){
-	if(!sq->king){
-		if( (!sq->x && sq->color==2) || (sq->x==7 && sq->color==1)){
-			sq->king = true;
-		}
-		if(countPieces(1,true)==countPieces(1) && countPieces(2,true)==countPieces(2))
+	if( (!sq->x && sq->color==2) || (sq->x==7 && sq->color==1)){
+		sq->king = true;
+		if(!end_section && countPieces(1,true)==countPieces(1) && countPieces(2,true)==countPieces(2))
 			end_section = true;
 	}
-	return sq->king;
+	return false;
 }
 
 bool Board::terminalTest(int color){ //False = GAME OVER
@@ -189,12 +189,12 @@ bool Board::terminalTest(int color){ //False = GAME OVER
 
 Board* Board::copy(){
 	char *state = (char*) malloc(50);
-	int place, place_int, color;
+	int place, place_int, c;
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
 			place = row*5 + col;
-			color = square[row][col]->color;
-			place_int = square[row][col]->king? color+2: color;
+			c = square[row][col]->color;
+			place_int = square[row][col]->king? c+2: c;
 			state[place] = place_int?place_int+'0':'-';
 		}
 		state[place+1] = '.';
@@ -204,20 +204,50 @@ Board* Board::copy(){
 	board->debugPrint = debugPrint;
 	board->end_section = end_section;
 	board->color = color;
+	board->t_lim = t_lim;
+	board->t_start = t_start;
 	return board;	
 }
 
-Move *Board::getBestMove(int depth, vector<Move*> &moves){
+void Board::deleteBoard(Board* board){
+	int col;
+	for(int row=0; row<8; row++)
+		for(int col=0; col<4; col++)
+			delete board->square[row][col];
+	delete board;
+}
+
+Move *Board::getBestMove(int depth, vector<Move*> &moves, bool &no_options){
 	Move *move, *bestMove;
 	int utility;
 	int i = 1;
 	int bestUtility = MININF;
 	if(debugPrint) cout<<"DEPTH "<<depth<<endl;
-	if(moves.size()==1) return moves.at(0);
+	if(moves.size()==1){
+		no_options = true;
+		move = moves.at(0);
+		if(!move->nextJumps.empty()){
+			Board *boardtmp;
+			boardtmp = copy();
+			if(boardtmp->makeMove(move)){
+				bool f = false;
+				move->nextJumpChosen = getBestMove(depth, move->nextJumps, f);
+			}
+			deleteBoard(boardtmp);
+		}
+		return move;
+	}
+
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
-		if(debugPrint) cout<<"\tMove "<<i++<<": ";
+		gettimeofday(&t_now, NULL);
+	
+		if( (t_now.tv_sec - t_start.tv_sec)>(t_lim-1))
+			if(t_now.tv_usec > ((t_start.tv_usec+500000)%1000000)) //Stops .2 seconds before limit
+				throw 2;
+		if(debugPrint) cout<<"\tMove "<<i<<": ";
+		i++;
 		move = *it;
-		utility = miniMaxVal(move, depth, true, MININF-1, POSINF);
+		utility = miniMaxVal(move, depth, true, MININF-1, POSINF+1);
 		move->value = utility;
 		if(utility>bestUtility){
 			bestUtility = utility;
@@ -228,33 +258,24 @@ Move *Board::getBestMove(int depth, vector<Move*> &moves){
 }
 
 int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //Turn is true for MAX
-	gettimeofday(&t_now, NULL);
-	if(difftime(t_now.tv_sec, t_start.tv_sec)>t_lim-1)
-		if(difftime(t_now.tv_usec, t_start.tv_usec)>500000)
-			throw 2;
-
-	if(!move->nextJumps.empty()){
-		if(debugPrint) {
-			debugPrint = false;
-			move->nextJumpChosen = getBestMove(depth, move->nextJumps);
-			debugPrint = true;
-			cout<<endl<<"bestMoveChosen: ";
-			move->nextJumpChosen->print();
-			cout<<endl;
-		} else move->nextJumpChosen = getBestMove(depth, move->nextJumps);
-	}
-	
 	Board *boardtmp;
+	bool f = false;
 	boardtmp = copy();
-	boardtmp->makeMove(move);
+	if(!move->nextJumps.empty()){
+		//nextJumpChosen==NULL so this should work.
+		if(boardtmp->makeMove(move))
+			move->nextJumpChosen = boardtmp->getBestMove(depth, move->nextJumps, f);
+		boardtmp = copy();
+	}
 
-	if(!(depth-1) || !boardtmp->terminalTest(color)){
+	// If turn, then MAX(color) just moved. Check terminalTest() on winning color
+	if((!boardtmp->makeMove(move)) || (!(depth-1))) { 
 		if(debugPrint){
 			int val = boardtmp->evaluateBoard();
 			move->print();
 			cout<<"--Bval: "<<val<<endl;
 			return val;
-		}else {
+		} else {
 			return boardtmp->evaluateBoard();
 		}
 	}
@@ -264,7 +285,7 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //
 	int bestUtility = turn?POSINF:MININF;
 	vector<Move*> moves;
 
-	if(turn) boardtmp->getLegalMoves(3-color, moves); 
+	if(turn) boardtmp->getLegalMoves((3-color), moves); 
 	else boardtmp->getLegalMoves(color, moves);
 	if(debugPrint) cout<<endl<<"||||||||||||"<<endl;
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
@@ -278,7 +299,7 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //
 			if(alpha>=beta) { if(debugPrint) {cout<<"PRUNED2 ----(";move->print();cout<<")";} return beta;}
 		}
 		if((turn && utility<bestUtility) || (!turn && utility>bestUtility)){
-			bestUtility = utility;
+			bestUtility = utility; //If (turn), then all of these utilities returned are from MIN's turn. Minimize them.
 		}
 	}
 	if(debugPrint){
@@ -286,7 +307,7 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //
 		move->print();
 		cout<<" ---U="<<bestUtility<<endl;
 	}
-
+	deleteBoard(boardtmp);
 	return bestUtility;
 }
 

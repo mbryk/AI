@@ -24,12 +24,8 @@ void Move::print(){
 	if(!nextJumps.empty()){
 		for (vector<Move*>::iterator it = nextJumps.begin() ; it != nextJumps.end(); ++it){
 			mv = *it;
-			cout<<endl<<"\t"<<
-				"["<<
-				mv->origin->x << "." << columnize(mv->origin) <<
-				"] ^-> ["<<
-				mv->dest->x << "." << columnize(mv->dest) <<
-				"]";
+			cout<<endl<<"\t";
+			mv->print();
 		}
 	}
 }

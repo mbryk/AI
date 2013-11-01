@@ -7,11 +7,11 @@ int main(int argc, char *argv[]){
 	//string state = "a";
 	char *state = NULL;
 	int players[2] = {1,0};
-	double t_limits[2] = {10,10};
-	int hnum[2] = {1,1};
+	int t_limits[2] = {5,5};
+	int hnum[2] = {3,3};
 	int c = 0;
 	bool prints = true; bool debugPrint = false;
-	while ((c = getopt (argc, argv, "l:s:p:h:od")) != -1){
+	while ((c = getopt (argc, argv, "t:l:s:p:h:od")) != -1){
 		switch (c){
 			case 's':
 				//stateFile = openfile(optarg);
@@ -21,9 +21,11 @@ int main(int argc, char *argv[]){
 				players[0] = optarg[0] - '0';
 				players[1] = optarg[1] - '0';
 				break;
+			case 't':
+				t_limits[0] = atoi(optarg);
+				break;
 			case 'l':
-				t_limits[0] = optarg[0] - '0';
-				t_limits[1] = optarg[1] - '0';
+				t_limits[1] = atoi(optarg);
 				break;
 			case 'o': //noprints = for testing purposes
 				prints = false;

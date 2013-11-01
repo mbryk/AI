@@ -33,22 +33,20 @@ Move *Player::chooseBest(vector<Move*> &moves){ //For Computer
 	return bestMove;
 }
 
-Move *Player::getChoice(vector<Move*> &moves){ //For Dumb Player
-	if(prints) printMoves(moves);
-	string movec;
+Move *Player::getChoice(vector<Move*> &moves, bool inputReq){ //For Dumb Player
 	int movenum;
-	do{
-		cin>>movec;
-		movenum = atoi(movec.c_str());
-	}while(movenum>moves.size() || movenum<1);
-
+	if(moves.size()>1 || (moves.size()==1 && inputReq)) {
+		printMoves(moves);
+		string movec;
+		do{
+			cin>>movec;
+			movenum = atoi(movec.c_str());
+		} while(movenum>moves.size() || movenum<1);	
+	} else movenum = 1;
+	
 	Move *move = moves.at(movenum-1);
-	if(!moves.at(movenum-1)->nextJumps.empty()){
-		if(move->nextJumps.size()>1){
-			cout<<endl;
-			move->nextJumpChosen = getChoice(move->nextJumps);
-		} else move->nextJumpChosen = move->nextJumps.at(0);
-	}
+	if(!move->nextJumps.empty())
+		move->nextJumpChosen = getChoice(move->nextJumps, false);
 	return move;
 }
 
