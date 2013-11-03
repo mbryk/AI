@@ -75,7 +75,8 @@ void Game::play(int turn){
 				}
 			}while(move==NULL);
 		}
-		if(!board->makeMove(move, draw)){ //FALSE = GAMEOVER
+		board->draw = false;
+		if(!board->makeMove(move, true)){ //FALSE = GAMEOVER
 			fin = color;
 			break;
 		}
@@ -92,9 +93,10 @@ void Game::play(int turn){
 bool Game::offerDraw(bool ptype){
 	if(!ptype) return board->draw;
 	char drawc; int draw;
+	cout<<"Would you like to accept a draw? (0 for no, 1 for yes)"<<endl;
 	do{
 		cin>>drawc;
-		draw = drawc - '0' - 1;
+		draw = drawc - '0';
 	} while (draw!=0 && draw!=1);
 
 	return (bool) draw;

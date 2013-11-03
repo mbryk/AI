@@ -49,10 +49,10 @@ private:
 	int miniMaxVal(Move*, int, bool, int, int);
 	int evaluateBoard(int, bool term = false);
 	int h1();
-	int h2();
+	int h2(int,bool);
+	int h2each(int, int);
 	int h3(int,bool);
-	int h3begin(int, int);
-	int h3end(int);
+	int h3each(int, int);
 	int distances(int,int,int);
 	int countPieces(int, bool king = false);
 	int countPositions(int, int weight = 1);

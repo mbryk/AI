@@ -28,7 +28,7 @@ Board::Board(const char* state){
 
 void Board::print(){
 	//0=Black, 1=Red Piece, 2=Black Piece, 3=Red King, 4=Black King, 5=Red
-	const char *shapes[6] = {"\033[40m     ","\033[40m \033[41m   \033[40m ","\033[40m \033[45m   \033[40m ", "\033[40m \033[30;41;1m K \033[40m ","\033[40m \033[37;45;1m K \033[40m ","\033[41m     "};
+	const char *shapes[6] = {"\033[40m     ","\033[40m \033[43m   \033[40m ","\033[40m \033[45m   \033[40m ", "\033[40m \033[30;43;1m K \033[40m ","\033[40m \033[37;45;1m K \033[40m ","\033[41m     "};
 	int color;
 	cout<<"     0    1    2    3    4    5    6    7"<<endl;
 	for(int row=7; row>=0; row--){
@@ -220,7 +220,7 @@ void Board::isDrawingBoard(){ //Offer a draw if both players have only kings, le
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
 			if(square[row][col]->color>0){ //Occupied
-				if(square[row][col]->king) count[square[row][col]->color]++;
+				if(square[row][col]->king) count[square[row][col]->color-1]++;
 				else draw = false;
 				if(square[row][col]->color==3-color)
 					pieces.push_back(square[row][col]);
@@ -241,8 +241,8 @@ void Board::isDrawingBoard(){ //Offer a draw if both players have only kings, le
 				}
 				spots.clear();
 			}
-			pieces.clear();
-	}
+	} else draw = false;
+	pieces.clear();
 }
 
 Board* Board::copy(){
@@ -424,7 +424,7 @@ int Board::evaluateBoard(int depth, bool term){
 	int val;
 	switch(hnum){
 		case 2:
-			val = h2();
+			val = h2(depth, term);
 			break;
 		case 3:
 			val = h3(depth, term);
@@ -438,25 +438,105 @@ int Board::evaluateBoard(int depth, bool term){
 
 int Board::h1(){
 	int pieceDiff = countPieces(color) - countPieces(3-color);
-	return pieceDiff*1000 + rand()%200;
-}
-
-int Board::h2(){
-	int pieceDiff = countPieces(color) - countPieces(3-color);
 	int kings = countPieces(color, true) - countPieces(3-color, true);
 	//int pos = countPositions(color) - countPositions(3-color);
 	int jumps = countJumps(color) - countJumps(3-color);
-	return pieceDiff*500 + kings*300 + jumps*200 + rand()%30;
+	return pieceDiff*1000 + kings*500 + jumps*100 + rand()%30;
+}
+
+int Board::h2(int depth, bool term){
+	int val = h2each(color,depth)-h2each(3-color, depth);
+	if(term) val += (20-depth)*10;
+	return val;
+}
+
+int Board::h2each(int clr, int depth){
+	int a, col, turn;
+	int pieceWeight,kingWeight,posWeight,rowWeight,sideWeight,distWeight,turnBonus,backRowBonus,middleBonus,depthSub;
+	int count = 0;
+	int dist = 0;
+	int pieceDiff = 0;
+	if(end_section){
+		pieceWeight = 150;
+		kingWeight = 250;
+		posWeight = 0;
+		rowWeight = 25;
+		sideWeight = 15;
+		distWeight = 10;
+		turnBonus = 20;
+		backRowBonus = 5;
+		middleBonus = 10;
+	} else {
+		pieceWeight = 150;
+		kingWeight = 100;
+		posWeight = 10;
+		rowWeight = 0;
+		sideWeight = 15;
+		distWeight = 0;
+		turnBonus = 20;
+		backRowBonus = 30;
+		middleBonus = 50;
+	}
+	
+	for(int row=0; row<8; row++){
+		a = (clr==1)?row:7-row; //rows from bottom
+		for(col=0; col<4; col++){
+			if(square[row][col]->color==clr){ 
+				//Add Piece Bonus
+				count += pieceWeight;
+
+				//Add King Bonus
+				if(square[row][col]->king) count+= kingWeight;
+				
+				//ADD Pos Bonus
+				if(a>4) count += posWeight;
+				if(a>3 && !square[row][col]->king) count+= a*rowWeight;
+
+				//ADD SIDES
+				if(!col || col==3) count+= sideWeight;
+
+				//Add to distances
+				dist += distances(row, col, 3-clr); //Distance from this space to other player's kings
+				pieceDiff++;
+			}
+			else if(square[row][col]->color==3-clr){
+				pieceDiff--;
+			}
+		}
+	}
+
+	//Distances Weight. Maximize if you have more pieces than other player.
+	dist*=distWeight;
+	if(pieceDiff>0) count+=distWeight;
+	else if(pieceDiff<0) count-=distWeight;
+
+	//Back Row Bonus (Rarity of all 4 of other team in back row can be ignored for !end_section)
+	a = color==1?0:7; int br = 0;
+	for(col=0;col<4;col++) {
+		if(!square[a][col]->color) br++;
+	}
+	if(br<2) count += br*backRowBonus;
+
+	//Middle Bonus
+	if(square[3][2]->color==clr) count+=middleBonus;
+	if(square[4][1]->color==clr) count+=middleBonus;
+
+	//TURN Bonus
+	turn = depth%2;
+	if(color==clr) turn++;
+	count += turn*turnBonus;
+
+	return count*100 + rand()%20;
 }
 
 int Board::h3(int depth, bool term){
-	int val = h3begin(color,depth)-h3begin(3-color, depth);
+	int val = h3each(color,depth)-h3each(3-color, depth);
 	if(term) val += (20-depth)*10;
 	return val;
 	
 }
 
-int Board::h3begin(int clr, int depth){
+int Board::h3each(int clr, int depth){
 	int a, col, turn;
 	int pieceWeight,kingWeight,posWeight,rowWeight,sideWeight,distWeight,turnBonus,backRowBonus,middleBonus,depthSub;
 	int count = 0;
