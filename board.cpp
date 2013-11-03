@@ -1,6 +1,6 @@
 #include "board.h"
-#define MININF -10000000
-#define POSINF 10000000
+#define MININF -100000000
+#define POSINF 100000000
 using namespace std;
 
 Board::Board(const char* state){
@@ -21,9 +21,6 @@ Board::Board(const char* state){
 			}
 		}
 		row++;
-		/*if((r = strtok(NULL, " ."))==NULL){
-			cerr<<"Invalid Board State"<<endl; exit(-1);
-		}*/
 		r = strtok(NULL, " .");
 	}
 	end_section = false;
@@ -31,7 +28,7 @@ Board::Board(const char* state){
 
 void Board::print(){
 	//0=Black, 1=Red Piece, 2=Black Piece, 3=Red King, 4=Black King, 5=Red
-	const char *shapes[6] = {"\033[40m     ","\033[40m \033[43m   \033[40m ","\033[40m \033[45m   \033[40m ", "\033[40m \033[43;1m K \033[40m ","\033[40m \033[45;1m K \033[40m ","\033[41m     "};
+	const char *shapes[6] = {"\033[40m     ","\033[40m \033[43m   \033[40m ","\033[40m \033[45m   \033[40m ", "\033[40m \033[30;43;1m K \033[40m ","\033[40m \033[37;45;1m K \033[40m ","\033[41m     "};
 	int color;
 	cout<<"     0    1    2    3    4    5    6    7"<<endl;
 	for(int row=7; row>=0; row--){
@@ -259,25 +256,32 @@ void Board::deleteMoves(vector<Move*> &moves){
 }
 
 Move *Board::getBestMove(int depth, vector<Move*> &moves, bool &no_options){
-	Move *move, *bestMove;
-	int utility;
-	int i = 1;
-	int bestUtility = MININF;
+	Move *move, *bestMove, *tempMove;
 	if(debugPrint) cout<<"DEPTH "<<depth<<endl;
 	if(moves.size()==1){
 		no_options = true;
 		move = moves.at(0);
 		if(!move->nextJumps.empty()){
+			tempMove = move->nextJumpChosen;
+			move->nextJumpChosen = NULL;
 			Board *boardtmp;
 			boardtmp = copy();
 			if(boardtmp->makeMove(move)){
-				bool f = false;
-				move->nextJumpChosen = getBestMove(depth, move->nextJumps, f);
+				no_options = false;
+				if((move->nextJumpChosen =boardtmp->getBestMove(depth, move->nextJumps, no_options))==NULL){ //Now, if there is more than one option, no_options becomes false again
+					move->nextJumpChosen = tempMove;
+					deleteBoard(boardtmp);
+					return NULL;
+				}
 			}
 			deleteBoard(boardtmp);
 		}
 		return move;
 	}
+
+	int utility;
+	int i = 1;
+	int bestUtility = MININF;
 
 	try{
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
@@ -497,9 +501,10 @@ int Board::countPieces(int color, bool king){
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
 			if(square[row][col]->color==color){ 
-				if(!color || (king && !square[row][col]->king)) continue;
+				if((king && !square[row][col]->king) || !color) continue;
 				count++;
 			}
+			else if(color==0) count++;
 		}
 	}
 	return count;

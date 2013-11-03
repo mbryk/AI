@@ -16,7 +16,6 @@ const char *parseFile(char *fileName)
 	return contents.c_str();
 }
 
-
 int main(int argc, char *argv[]){
 	const char *state = (char*) "1111.1111.1111.----.----.2222.2222.2222aaaaaaaaaaa";
 	int players[2] = {1,0};

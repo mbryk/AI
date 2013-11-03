@@ -4,7 +4,6 @@ using namespace std;
 Move::Move(Square *origin_s, Square *dest_s){
 	origin = origin_s;
 	dest = dest_s;	
-
 	value = 0;
 	jumped = NULL; //INITIALIZED
 	nextJumpChosen = NULL; //INITIALIZED

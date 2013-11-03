@@ -4,4 +4,4 @@ AI
 Making Intelligent Agent to Play User/Itself in Checkers
 
 Notes:
--Don't kill itself.. Timeout? MEMORY!
+-End game heuristic. How do I finish him off?
