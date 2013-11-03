@@ -17,7 +17,7 @@ Game::Game(const char *state, int player_types[2], double t_limits[2], bool ispr
 
 void Game::play(int turn){
 	int over, fin, depth, color;
-	bool no_options;
+	bool no_options, draw;
 	struct timeval t_start, t_now;
 	Move *move, *tempMove;
 	board->print(); //Initial Print
@@ -38,27 +38,44 @@ void Game::play(int turn){
 		}
 		if(!players[turn]->type){ // For the computer
 				//while(depth<8){
-				while(1){
-					gettimeofday(&t_now, NULL);
-					if(t_now.tv_sec-t_start.tv_sec > .7*players[turn]->t_lim) break;
-					if((tempMove = board->getBestMove(++depth, moves, no_options))!=NULL){
-						move = tempMove;
-						if(no_options) break;
+			while(1){
+				if(board->draw){
+					if(offerDraw(players[1-turn]->type)){
+						cout<<"Congrats! It's a draw!"<<endl; //offer it to the other person
+						exit(0);
 					} else {
-						depth--;
+						cout<<"Denied!"<<endl;
 					}
 				}
+				gettimeofday(&t_now, NULL);
+				if(t_now.tv_sec-t_start.tv_sec > .7*players[turn]->t_lim) break;
+				if((tempMove = board->getBestMove(++depth, moves, no_options))!=NULL){
+					move = tempMove;
+					if(no_options) break;
+				} else {
+					depth--;
+				}
+			}
 			players[turn]->printMoves(moves);
 			cout<<endl;
+
 			move->print();
 			cout<<" Chosen."<<endl<<"DEPTH:"<<depth<<" TOTAL TIME:";
 			gettimeofday(&t_now, NULL);
 			board->t_now = t_now;
 			cout<<setprecision(6)<<board->tdiff()<<endl; 
 		} else {
-			move = players[turn]->getChoice(moves, true);
+			do{
+				move=players[turn]->getChoice(moves, true);
+				if(move==NULL) {
+					if(offerDraw(players[1-turn]->type)){
+						cout<<"Congrats! It's a Draw!"<<endl;
+						exit(-1);
+					} else { cout<<"Denied!"<<endl;}
+				}
+			}while(move==NULL);
 		}
-		if(!board->makeMove(move)){ //FALSE = GAMEOVER
+		if(!board->makeMove(move, draw)){ //FALSE = GAMEOVER
 			fin = color;
 			break;
 		}
@@ -70,5 +87,15 @@ void Game::play(int turn){
 	string colors[2] = {"Red","Black"};
 	board->print();
 	cout<<"Game Over! "<<colors[fin-1]<<" wins!"<<endl<<endl;
+}
 
+bool Game::offerDraw(bool ptype){
+	if(!ptype) return board->draw;
+	char drawc; int draw;
+	do{
+		cin>>drawc;
+		draw = drawc - '0' - 1;
+	} while (draw!=0 && draw!=1);
+
+	return (bool) draw;
 }

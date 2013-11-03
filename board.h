@@ -16,6 +16,7 @@ class Board{
 public:
 	Board(const char*);
 	bool debugPrint;
+	bool draw;
 	
 	struct timeval t_start;
 	struct timeval t_now;
@@ -25,7 +26,7 @@ public:
 
 	void print();
 	bool getLegalMoves(int, vector<Move*>&);
-	bool makeMove(Move*); // returns "Game Over"
+	bool makeMove(Move*, bool checkDraw = false); // returns "Game Over"
 	Move *getBestMove(int, vector<Move*>&, bool&);
 	double tdiff();
 	void deleteMoves(vector<Move*>&);
@@ -41,6 +42,7 @@ private:
 	Square *getNextSquare(Square*,Square*);
 	void emptySquare(Square*);
 	bool checkKing(Square*);
+	void isDrawingBoard();
 	bool terminalTest(int);
 	Board *copy();
 	void deleteBoard(Board*);

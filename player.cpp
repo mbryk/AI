@@ -12,6 +12,7 @@ Move *Player::getChoice(vector<Move*> &moves, bool inputReq){ //For Dumb Player
 		string movec;
 		do{
 			cin>>movec;
+			if(movec.compare("draw")==0) return NULL;
 			movenum = atoi(movec.c_str());
 		} while(movenum>moves.size() || movenum<1);	
 	} else movenum = 1;
@@ -32,5 +33,4 @@ void Player::printMoves(vector<Move*> &moves){
 		cout<<endl;
 		i++;
 	}
-	cout<<endl;
 }

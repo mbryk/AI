@@ -19,6 +19,7 @@ private:
 	bool prints;
 	Board *board;
 	Player *players[2];
+	bool offerDraw(bool);
 }; 
 
 #endif	/* GAME_H */
