@@ -1,21 +1,33 @@
 #include "game.h"
 #include "unistd.h"
 #include <iostream>
+#include <fstream>
+#include <string>
 using namespace std;
 
+const char *parseFile(char *fileName)
+{
+	ifstream in(fileName);
+	if(!in.good()){
+		cerr<<"Bad Board File"<<endl; exit(-1);
+	}
+	string contents((std::istreambuf_iterator<char>(in)), 
+    istreambuf_iterator<char>());
+	return contents.c_str();
+}
+
+
 int main(int argc, char *argv[]){
-	//string state = "a";
-	char *state = NULL;
+	const char *state = (char*) "1111.1111.1111.----.----.2222.2222.2222aaaaaaaaaaa";
 	int players[2] = {1,0};
-	int t_limits[2] = {5,5};
+	double t_limits[2] = {5,5};
 	int hnum[2] = {3,3};
 	int c = 0;
 	bool prints = true; bool debugPrint = false;
 	while ((c = getopt (argc, argv, "t:l:s:p:h:od")) != -1){
 		switch (c){
 			case 's':
-				//stateFile = openfile(optarg);
-				//state = parse(stateFile);
+				state = parseFile(optarg);
 				break;
 			case 'p':
 				players[0] = optarg[0] - '0';

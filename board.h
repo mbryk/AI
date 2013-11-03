@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <string.h>
 #include "time.h"
 #include "sys/time.h"
 
@@ -13,12 +14,12 @@ using namespace std;
 class Board{
 
 public:
-	Board(char*);
+	Board(const char*);
 	bool debugPrint;
 	
 	struct timeval t_start;
 	struct timeval t_now;
-	int t_lim;
+	double t_lim;
 	int color;
 	int hnum;
 
@@ -26,7 +27,8 @@ public:
 	bool getLegalMoves(int, vector<Move*>&);
 	bool makeMove(Move*); // returns "Game Over"
 	Move *getBestMove(int, vector<Move*>&, bool&);
-
+	double tdiff();
+	void deleteMoves(vector<Move*>&);
 private:
 	Square *square[8][4];
 	bool end_section;
