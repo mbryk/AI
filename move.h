@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 class Move{
 public:
@@ -13,7 +14,7 @@ public:
 	std::vector<Move*> nextJumps;
 	int value; //tmp
 	Move(Square*, Square*);
-	void print();
+	void print(int tab = 0);
 private:
 	int columnize(Square*);
 };

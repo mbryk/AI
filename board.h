@@ -35,6 +35,7 @@ private:
 	void printRow(int);
 	void getAdjacents(Square*, vector<Square*>&, bool);
 	void getJumps(Square*, vector<Move*>&);
+	void simplify(vector<Move*>&);
 	void getNonJumps(Square*, vector<Move*>&);
 	bool isValid(int, int);
 	Square *getNextSquare(Square*,Square*);
@@ -44,11 +45,11 @@ private:
 	Board *copy();
 	void deleteBoard(Board*);
 	int miniMaxVal(Move*, int, bool, int, int);
-	int evaluateBoard();
+	int evaluateBoard(int, bool term = false);
 	int h1();
 	int h2();
-	int h3();
-	int h3begin(int);
+	int h3(int,bool);
+	int h3begin(int, int);
 	int h3end(int);
 	int distances(int,int,int);
 	int countPieces(int, bool king = false);

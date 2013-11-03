@@ -76,6 +76,7 @@ bool Board::getLegalMoves(int color, vector<Move*> &moves){ //FALSE = GAME OVER
 	if(moves.empty()) 
 		for (vector<Square*>::iterator it = myPieces.begin() ; it != myPieces.end(); ++it)
 			getNonJumps(*it, moves);
+	myPieces.clear();
 	return !moves.empty();
 }
 
@@ -92,11 +93,31 @@ void Board::getJumps(Square *origin, vector<Move*> &moves){
 				move = new Move(origin, dest);
 				move->jumped = spot;
 				Board *boardtmp = copy();
-				if(boardtmp->makeMove(move))
+				if(boardtmp->makeMove(move)){
 					boardtmp->getJumps(boardtmp->square[dest->x][dest->y], move->nextJumps); //This is giving me an error, because dest is actually unoccupied.
+					simplify(move->nextJumps);					
+				}
+				deleteBoard(boardtmp);
 				moves.push_back(move);
 		}
 	}	
+	spots.clear();
+}
+void Board::simplify(vector<Move*> &moves){
+	Square *tmp;
+	Move *move;
+	for(vector<Move*>::iterator it = moves.begin(); it != moves.end(); ++it){
+		move = *it;
+		tmp = move->origin;
+		move->origin = square[tmp->x][tmp->y];
+		tmp = move->dest;
+		move->dest = square[tmp->x][tmp->y];
+		tmp = move->jumped;
+		move->jumped = square[tmp->x][tmp->y];
+		if(!move->nextJumps.empty()){
+			simplify(move->nextJumps);
+		}
+	}
 }
 
 void Board::getNonJumps(Square *origin, vector<Move*> &moves){
@@ -110,6 +131,7 @@ void Board::getNonJumps(Square *origin, vector<Move*> &moves){
 		moves.push_back(move);
 
 	}
+	spots.clear();
 }
 
 void Board::getAdjacents(Square *current, vector<Square*> &spots, bool available){ // Available = Valid and empty, Unavailable = Valid and other color (for jumps)
@@ -208,6 +230,7 @@ Board* Board::copy(){
 	Board *board;
 	board = new Board(state);
 	board->debugPrint = debugPrint;
+	board->hnum = hnum;
 	board->end_section = end_section;
 	board->color = color;
 	board->t_lim = t_lim;
@@ -224,9 +247,15 @@ void Board::deleteBoard(Board* board){
 }
 
 void Board::deleteMoves(vector<Move*> &moves){
-	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
-		delete *it;
-	}
+	Move *move;
+	while(!moves.empty()) {
+        move = moves.back();
+        if(!move->nextJumps.empty()) 
+        	deleteMoves(move->nextJumps);
+        delete move;
+        moves.pop_back();
+    }
+    moves.clear();
 }
 
 Move *Board::getBestMove(int depth, vector<Move*> &moves, bool &no_options){
@@ -250,9 +279,9 @@ Move *Board::getBestMove(int depth, vector<Move*> &moves, bool &no_options){
 		return move;
 	}
 
+	try{
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
-		gettimeofday(&t_now, NULL);
-		if(tdiff()>(t_lim-.1)) throw 2;
+
 		if(debugPrint) cout<<"\tMove "<<i<<": ";
 		i++;
 		move = *it;
@@ -264,6 +293,7 @@ Move *Board::getBestMove(int depth, vector<Move*> &moves, bool &no_options){
 		}
 	}
 	return bestMove;
+	} catch(int cat){ return NULL;}
 }
 
 double Board::tdiff(){
@@ -274,26 +304,33 @@ double Board::tdiff(){
 }
 
 int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //Turn is true for MAX
+	gettimeofday(&t_now, NULL);
+	if(tdiff()>(t_lim-.1)) throw 2;
+
 	Board *boardtmp;
+	Move *tempMove;
 	bool f = false;
 	boardtmp = copy();
 	if(!move->nextJumps.empty()){
-		//nextJumpChosen==NULL so this should work.
 		if(boardtmp->makeMove(move))
-			move->nextJumpChosen = boardtmp->getBestMove(depth, move->nextJumps, f);
+			if((tempMove=boardtmp->getBestMove(depth, move->nextJumps, f))!=NULL)
+				move->nextJumpChosen = tempMove;
+			else {
+				deleteBoard(boardtmp);
+				throw 2;
+			}
 		boardtmp = copy();
 	}
-
+	bool t;
 	// If turn, then MAX(color) just moved. Check terminalTest() on winning color
-	if((!boardtmp->makeMove(move)) || (!(depth-1))) { 
+	if( (!(t = boardtmp->makeMove(move))) || (!(depth-1))) { 
+		int val = boardtmp->evaluateBoard(depth, !t);
+		deleteBoard(boardtmp);
 		if(debugPrint){
-			int val = boardtmp->evaluateBoard();
 			move->print();
 			cout<<"--Bval: "<<val<<endl;
-			return val;
-		} else {
-			return boardtmp->evaluateBoard();
 		}
+		return val;
 	}
 
 	Move *mv;
@@ -304,15 +341,26 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //
 	if(turn) boardtmp->getLegalMoves((3-color), moves); 
 	else boardtmp->getLegalMoves(color, moves);
 	if(debugPrint) cout<<endl<<"||||||||||||"<<endl;
+
+	try{
+
 	for (vector<Move*>::iterator it = moves.begin() ; it != moves.end(); ++it){
 		mv = *it;
 		utility = boardtmp->miniMaxVal(mv, depth-1, !turn, alpha, beta);
 		if(turn){
 			beta = min(beta, utility);
-			if(beta<=alpha) { if(debugPrint) {cout<<"PRUNED1 ----(";move->print();cout<<")";} return alpha;}
+			if(beta<=alpha) { 
+				if(debugPrint) {cout<<"PRUNED1 ----(";move->print();cout<<")";} 
+				deleteMoves(moves);deleteBoard(boardtmp);
+				return alpha;
+			}
 		} else {
 			alpha = max(alpha, utility);
-			if(alpha>=beta) { if(debugPrint) {cout<<"PRUNED2 ----(";move->print();cout<<")";} return beta;}
+			if(alpha>=beta) { 
+				if(debugPrint) {cout<<"PRUNED2 ----(";move->print();cout<<")";} 
+				deleteMoves(moves);deleteBoard(boardtmp);				
+				return beta;
+			}
 		}
 		if((turn && utility<bestUtility) || (!turn && utility>bestUtility)){
 			bestUtility = utility; //If (turn), then all of these utilities returned are from MIN's turn. Minimize them.
@@ -326,16 +374,23 @@ int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //
 	deleteMoves(moves);
 	deleteBoard(boardtmp);
 	return bestUtility;
+
+	} catch (int cat){
+		deleteMoves(moves);
+		deleteBoard(boardtmp);
+		throw 2;
+	}
+
 }
 
-int Board::evaluateBoard(){
+int Board::evaluateBoard(int depth, bool term){
 	int val;
 	switch(hnum){
 		case 2:
 			val = h2();
 			break;
 		case 3:
-			val = h3();
+			val = h3(depth, term);
 			break;
 		default:
 			val = h1();
@@ -357,54 +412,85 @@ int Board::h2(){
 	return pieceDiff*500 + kings*300 + jumps*200 + rand()%30;
 }
 
-int Board::h3(){
-	if(end_section) return (h3end(color)-h3end(3-color));
-	else return (h3begin(color)-h3begin(3-color));
+int Board::h3(int depth, bool term){
+	int val = h3begin(color,depth)-h3begin(3-color, depth);
+	if(term) val += (20-depth)*10;
+	return val;
+	
 }
 
-int Board::h3begin(int color){
-	int a, col;
+int Board::h3begin(int clr, int depth){
+	int a, col, turn;
+	int pieceWeight,kingWeight,posWeight,rowWeight,sideWeight,distWeight,turnBonus,backRowBonus,depthSub;
 	int count = 0;
+	int dist = 0;
+	int pieceDiff = 0;
+	if(end_section){
+		pieceWeight = 150;
+		kingWeight = 250;
+		posWeight = 0;
+		rowWeight = 25;
+		sideWeight = 15;
+		distWeight = 10;
+		turnBonus = 20;
+		backRowBonus = 20;
+	} else {
+		pieceWeight = 150;
+		kingWeight = 150;
+		posWeight = 10;
+		rowWeight = 3;
+		sideWeight = 15;
+		distWeight = 0;
+		turnBonus = 20;
+		backRowBonus = 20;
+	}
+	
 	for(int row=0; row<8; row++){
-		a = (color==1)?row:7-row; //rows from bottom
+		a = (clr==1)?row:7-row; //rows from bottom
 		for(col=0; col<4; col++){
-			if(square[row][col]->color==color){ 
-				//ADD PIECE VAL
-				if(square[row][col]->king) count+=10;
-				//ADD POS VAL
-				else if(a<4) count+=5;
-				else count+=7;
+			if(square[row][col]->color==clr){ 
+				//Add Piece Bonus
+				count += pieceWeight;
+
+				//Add King Bonus
+				if(square[row][col]->king) count+= kingWeight;
+				
+				//ADD Pos Bonus
+				if(a>4) count += posWeight;
+				if(a>3) count+= a*rowWeight;
 
 				//ADD SIDES
-				if(!col || col==3) count+=3;
+				if(!col || col==3) count+= sideWeight;
+
+				//Add to distances
+				dist += distances(row, col, 3-clr); //Distance from this space to other player's kings
+				pieceDiff++;
+			}
+			else if(square[row][col]->color==3-clr){
+				pieceDiff--;
 			}
 		}
 	}
+
+	//Distances Weight. Maximize if you have more pieces than other player.
+	dist*=distWeight;
+	if(pieceDiff>0) count+=distWeight;
+	else if(pieceDiff<0) count-=distWeight;
+
+	//Back Row Bonus
 	a = color==1?0:7; int br = 0;
 	for(col=0;col<4;col++) {
-		if(!square[a][col]->color) continue; 
-		if(col==3) count+=10;
+		if(!square[a][col]->color) br++;
 	}
+	if(br<2) count += br*backRowBonus;
+
+	//TURN Bonus
+	turn = depth%2;
+	if(color==clr) turn++;
+	count += turn*turnBonus;
+
 	return count*100 + rand()%20;
 }
-int Board::h3end(int color){
-	int dist = 0;
-	int count = 0;
-	for(int row=0; row<8; row++){
-		for(int col=0; col<4; col++){
-			if(square[row][col]->color==color){ 
-				dist += distances(row, col, 3-color);
-				count += (square[row][col]->king)?2:1;
-			}
-		}
-	}
-	int rn = rand()%20;
-	dist*=50;
-	int diff = (countPieces(color) - countPieces(3-color))*100 + rn;
-	diff += (diff>0) ? dist : -dist;
-	return diff;
-}
-
 
 int Board::countPieces(int color, bool king){
 	int count = 0;
@@ -453,7 +539,7 @@ int Board::distances(int r, int c, int color){
 	int dist = 0;
 	for(int row=0; row<8; row++){
 		for(int col=0; col<4; col++){
-			if(square[row][col]->color==color){ 
+			if(square[row][col]->color==color && square[row][col]->king){ 
 				dist += abs(row-r) + abs(col-c)/2;
 			}
 		}

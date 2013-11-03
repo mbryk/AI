@@ -10,7 +10,7 @@ Move::Move(Square *origin_s, Square *dest_s){
 	nextJumpChosen = NULL; //INITIALIZED
 }
 
-void Move::print(){
+void Move::print(int tab){
 	Move *mv;
 	string text = "] -> [";
 	if(jumped != NULL) text = "] ^-> [";
@@ -22,10 +22,12 @@ void Move::print(){
 		<<columnize(dest)
 		<<"] = "<<value;
 	if(!nextJumps.empty()){
+		cout<<" -->";
+		tab +=7;
 		for (vector<Move*>::iterator it = nextJumps.begin() ; it != nextJumps.end(); ++it){
 			mv = *it;
-			cout<<endl<<"\t";
-			mv->print();
+			cout<<endl<<setw(tab);
+			mv->print(tab);
 		}
 	}
 }

@@ -19,8 +19,9 @@ void Game::play(int turn){
 	int over, fin, depth, color;
 	bool no_options;
 	struct timeval t_start, t_now;
-	Move *move;
+	Move *move, *tempMove;
 	board->print(); //Initial Print
+	vector<Move*> moves;
 	while(1){
 		gettimeofday(&t_start, NULL);
 		board->t_start = t_start;
@@ -28,27 +29,25 @@ void Game::play(int turn){
 		board->hnum = players[turn]->hnum;
 		color = players[turn]->color;
 		board->color = color;
-		
 		depth = 0;
 		no_options = false;
-		vector<Move*> moves;
+		
 		if(!board->getLegalMoves(color, moves)){ 
 			fin = 3-color;
 			break;
 		}
 		if(!players[turn]->type){ // For the computer
-			try{
-				//while(depth<5){
+				//while(depth<8){
 				while(1){
 					gettimeofday(&t_now, NULL);
 					if(t_now.tv_sec-t_start.tv_sec > .7*players[turn]->t_lim) break;
-					move = board->getBestMove(++depth, moves, no_options); //To all moves w/o nextJumps().
-					if(no_options) break;
+					if((tempMove = board->getBestMove(++depth, moves, no_options))!=NULL){
+						move = tempMove;
+						if(no_options) break;
+					} else {
+						depth--;
+					}
 				}
-			}
-			catch (int t){
-				depth--;
-			}
 			players[turn]->printMoves(moves);
 			cout<<endl;
 			move->print();
