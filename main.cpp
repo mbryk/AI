@@ -1,3 +1,10 @@
+/**************
+Mark Bryk
+ECE 469 - Project 1
+Intelligent Checkers
+November 3rd, 2013
+**************/
+
 #include "game.h"
 #include "unistd.h"
 #include <iostream>

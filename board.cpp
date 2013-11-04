@@ -524,9 +524,10 @@ int Board::h2each(int clr, int turn){
 	}
 	//TURN Bonus
 	if(turn==clr) bonuses+=turnBonus;
-
-	if(end_section) count= piecesScore*10000000 + rowScore*100000 + tradeScore*1000 + bonuses*10 + rand()%10;
-	else count = piecesScore*10000000 + tradeScore*100000 + distScore*1000 + bonuses*10 + rand()%10;
+	
+	if(end_section) count = piecesScore*10000000 + tradeScore*100000 + distScore*100000 + rowScore*10000 + bonuses*10 + rand()%10;
+	else count= piecesScore*10000000 + rowScore*100000 + tradeScore*1000 + bonuses*10 + rand()%10;
+	
 	return count;
 }
 
