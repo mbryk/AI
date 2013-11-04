@@ -15,9 +15,7 @@ class Board{
 
 public:
 	Board(const char*);
-	bool debugPrint;
 	bool draw;
-	
 	struct timeval t_start;
 	struct timeval t_now;
 	double t_lim;
@@ -47,11 +45,11 @@ private:
 	Board *copy();
 	void deleteBoard(Board*);
 	int miniMaxVal(Move*, int, bool, int, int);
-	int evaluateBoard(int, bool term = false);
+	int evaluateBoard(int, int, bool term = false);
 	int h1();
 	int h2(int,bool);
 	int h2each(int, int);
-	int h3(int,bool);
+	int h3(int,int, bool);
 	int h3each(int, int);
 	int distances(int,int,int);
 	int countPieces(int, bool king = false);

@@ -19,31 +19,17 @@ const char *parseFile(char *fileName)
 int main(int argc, char *argv[]){
 	const char *state = (char*) "1111.1111.1111.----.----.2222.2222.2222aaaaaaaaaaa";
 	int players[2] = {1,0};
-	double t_limits[2] = {5,5};
-	int hnum[2] = {3,3};
+	double t_limit = 5;
+	int hnum[2] = {2,2};
 	int c = 0;
-	bool prints = true; bool debugPrint = false;
-	while ((c = getopt (argc, argv, "t:l:s:p:h:od")) != -1){
+	while ((c = getopt (argc, argv, "b:p:h:")) != -1){
 		switch (c){
-			case 's':
+			case 'b':
 				state = parseFile(optarg);
 				break;
 			case 'p':
 				players[0] = optarg[0] - '0';
 				players[1] = optarg[1] - '0';
-				break;
-			case 't':
-				t_limits[0] = atoi(optarg);
-				break;
-			case 'l':
-				t_limits[1] = atoi(optarg);
-				break;
-			case 'o': //noprints = for testing purposes
-				prints = false;
-				players[0] = 0;
-				break;
-			case 'd':
-				debugPrint = true;
 				break;
 			case 'h':
 				hnum[0] = optarg[0] - '0';
@@ -51,15 +37,24 @@ int main(int argc, char *argv[]){
 				break;
 		}
 	}
-	Game *game = new Game(state, players, t_limits, prints, debugPrint, hnum);
-	char turnc;
+	
+	char turnc; string t_limit_string;
 	int turn;
-	cout<<"Whose turn is it?"<<endl<<"1:Red, 2:Black"<<endl;
+	int t_limit_int;
+	cout<<"Whose turn is it?"<<endl<<"1:Yellow, 2:Black"<<endl;
 	do{
 		cin>>turnc;
 		turn = turnc - '0' - 1;
 	} while (turn!=0 && turn!=1);
 
+	cout<<"What is the program's time limit? (in seconds)"<<endl;
+	do{
+		cin>>t_limit_string;
+		t_limit_int = atoi(t_limit_string.c_str());
+	} while(t_limit_int<=0);
+	t_limit = (double) t_limit_int;
+
+	Game *game = new Game(state, players, hnum, t_limit);
 	game->play(turn);	
 
 	return 0;

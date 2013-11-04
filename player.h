@@ -10,8 +10,6 @@ class Player{
 public:
 	bool type; //0=Comp, 1=Human
 	int color;
-	int t_lim;
-	bool prints; //testing
 	int hnum;
 
 	Player(int);

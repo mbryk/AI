@@ -13,10 +13,9 @@
 
 class Game{
 public:
-	Game(const char*, int player_types[2], double t_limits[2], bool, bool, int hnum[2]);
+	Game(const char*, int player_types[2], int hnum[2], double);
 	void play(int);
 private:
-	bool prints;
 	Board *board;
 	Player *players[2];
 	bool offerDraw(bool);

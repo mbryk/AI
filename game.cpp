@@ -1,22 +1,19 @@
 #include "game.h"
 using namespace std;
-Game::Game(const char *state, int player_types[2], double t_limits[2], bool isprints, bool debugPrint, int hnum[2]){
+Game::Game(const char *state, int player_types[2], int hnum[2], double t_lim){
 	board = new Board(state);
-	board->debugPrint = debugPrint;
+	board->t_lim = t_lim;
+
 	srand(time(NULL));
-	prints = isprints;
 	for(int i=0;i<2;i++){
 		players[i] = new Player(player_types[i]);
 		players[i]->color = i+1;
-		players[i]->t_lim = t_limits[i];
 		players[i]->hnum = hnum[i];
-		players[i]->prints = isprints; //testing
-
 	}
 }
 
 void Game::play(int turn){
-	int over, fin, depth, color;
+	int fin, depth, color;
 	bool no_options, draw;
 	struct timeval t_start, t_now;
 	Move *move, *tempMove;
@@ -25,7 +22,6 @@ void Game::play(int turn){
 	while(1){
 		gettimeofday(&t_start, NULL);
 		board->t_start = t_start;
-		board->t_lim = players[turn]->t_lim;
 		board->hnum = players[turn]->hnum;
 		color = players[turn]->color;
 		board->color = color;
@@ -48,7 +44,7 @@ void Game::play(int turn){
 					}
 				}
 				gettimeofday(&t_now, NULL);
-				if(t_now.tv_sec-t_start.tv_sec > .7*players[turn]->t_lim) break;
+				if(t_now.tv_sec-t_start.tv_sec > .7*board->t_lim) break;
 				if((tempMove = board->getBestMove(++depth, moves, no_options))!=NULL){
 					move = tempMove;
 					if(no_options) break;
@@ -56,7 +52,6 @@ void Game::play(int turn){
 					depth--;
 				}
 			}
-			players[turn]->printMoves(moves);
 			cout<<endl;
 
 			move->print();
@@ -81,11 +76,11 @@ void Game::play(int turn){
 			break;
 		}
 		board->deleteMoves(moves);
-		if(prints) board->print();
+		board->print();
 		turn = 1-turn;
 		
 	}
-	string colors[2] = {"Red","Black"};
+	string colors[2] = {"Yellow","Black"};
 	board->print();
 	cout<<"Game Over! "<<colors[fin-1]<<" wins!"<<endl<<endl;
 }
