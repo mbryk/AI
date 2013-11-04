@@ -1,6 +1,6 @@
 #include "board.h"
-#define MININF -100000000
-#define POSINF 100000000
+#define MININF -1000000000
+#define POSINF 1000000000
 using namespace std;
 
 Board::Board(const char* state){
@@ -351,7 +351,7 @@ double Board::tdiff(){
 
 int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //Turn is true for MAX
 	gettimeofday(&t_now, NULL);
-	if(tdiff()>(t_lim-.1)) throw 2;
+	if(tdiff()>(t_lim-.15)) throw 2;
 	int trn;
 
 	Board *boardtmp;
@@ -423,10 +423,7 @@ int Board::evaluateBoard(int depth, int turn, bool term){
 	int val;
 	switch(hnum){
 		case 2:
-			val = h2(depth, term);
-			break;
-		case 3:
-			val = h3(depth, turn, term);
+			val = h2(depth, turn, term);
 			break;
 		default:
 			val = h1();
@@ -443,191 +440,94 @@ int Board::h1(){
 	return pieceDiff*1000 + kings*500 + jumps*100 + rand()%30;
 }
 
-int Board::h2(int depth, bool term){
-	/*int val = h2each(color,depth)-h2each(3-color, depth);
-	if(term) val += (20-depth)*10;
-	return val;*/
-}
 
-int Board::h2each(int clr, int depth){/*
-	int a, col, turn;
-	int pieceWeight,kingWeight,posWeight,rowWeight,sideWeight,distWeight,turnBonus,backRowBonus,middleBonus,kingCornerBonus,depthSub;
-	int count = 0;
-	int dist = 0;
-	int pieceDiff = 0;
-	if(end_section){
-		pieceWeight = 150;
-		kingWeight = 250;
-		posWeight = 0;
-		rowWeight = 25;
-		sideWeight = 15;
-		distWeight = 10;
-		turnBonus = 20;
-		backRowBonus = 5;
-		middleBonus = 10;
-		kingCornerBonus = 30;
-	} else {
-		pieceWeight = 150;
-		kingWeight = 100;
-		posWeight = 10;
-		rowWeight = 0;
-		sideWeight = 15;
-		distWeight = 0;
-		turnBonus = 20;
-		backRowBonus = 30;
-		middleBonus = 50;
-		kingCornerBonus = 0;
-	}
-	
-	for(int row=0; row<8; row++){
-		a = (clr==1)?row:7-row; //rows from bottom
-		for(col=0; col<4; col++){
-			if(square[row][col]->color==clr){ 
-				//Add Piece Bonus
-				count += pieceWeight;
-
-				//Add King Bonus
-				if(square[row][col]->king) count+= kingWeight;
-				
-				//ADD Pos Bonus
-				if(a>4) count += posWeight;
-				if(a>3 && !square[row][col]->king) count+= a*rowWeight;
-
-				//ADD SIDES
-				if(!col || col==3) count+= sideWeight;
-
-				//Add to distances
-				dist += distances(row, col, 3-clr); //Distance from this space to other player's kings
-				pieceDiff++;
-			}
-			else if(square[row][col]->color==3-clr){
-				pieceDiff--;
-			}
-		}
-	}
-
-	//Distances Weight. Maximize if you have more pieces than other player.
-	dist*=distWeight;
-	if(pieceDiff>0) count+=distWeight;
-	else if(pieceDiff<0) count-=distWeight;
-
-	//Back Row Bonus (Rarity of all 4 of other team in back row can be ignored for !end_section)
-	a = color==1?0:7; int br = 0;
-	for(col=0;col<4;col++) {
-		if(!square[a][col]->color) br++;
-	}
-	if(br<2) count += br*backRowBonus;
-
-	//Middle Bonus
-	if(square[3][2]->color==clr) count+=middleBonus;
-	if(square[4][1]->color==clr) count+=middleBonus;
-
-	//Double Corner Bonus
-	if(square[0][0]->color==clr || square[1][0]->color==clr) count+=kingCornerBonus;
-	if(square[6][3]->color==clr || square[7][3]->color==clr) count+=kingCornerBonus;
-
-	//TURN Bonus
-	turn = depth%2;
-	if(color==clr) turn++;
-	count += turn*turnBonus;
-
-	return count*100 + rand()%20;*/
-}
-
-int Board::h3(int depth, int turn, bool term){
-	int val = h3each(color,turn)-h3each(3-color, turn);
+int Board::h2(int depth, int turn, bool term){
+	int val = h2each(color,turn)/2-h2each(3-color, turn)/2;
 
 	if(term) val += turn?(20-depth)*-10:(20-depth)*10; //For you dying, smaller depth = worse. For him dying, smaller depth = GOOD!
 	
 	return val;
-	
 }
 
-int Board::h3each(int clr, int turn){
-	int a, col;
-	int pieceWeight,kingWeight,posWeight,rowWeight,sideBonus,distWeight,turnBonus,backRowBonus,middleBonus,depthSub, kingCornerBonus;
-	int count = 0;
-	int dist = 0;
+int Board::h2each(int clr, int turn){
+	int a, col, count;
+	int distScore, tradeScore, pieceWeight,kingWeight,sideBonus,turnBonus,backRowBonus,middleBonus,depthSub, kingCornerBonus;
+	int pieces = 0; /* 0 to 24 pieces. Creates a utility*/
 	int pieceDiff = 0;
-	if(end_section){
-		pieceWeight = 100;
-		kingWeight = 100;
-		posWeight = 0;
-		rowWeight = 10; //for non kings
-		distWeight = 15;
+	int dist = 0;
+	
+	int piecesScore = 0; /* 0 to 100 */
+	int rowScore = 0; /* 0 to 100 */
+	int bonuses = 0;
 
-		turnBonus = 10;
-		sideBonus = 15;
-		backRowBonus = 5;
-		middleBonus = 10;
-		kingCornerBonus = 30;
-	} else {
-		pieceWeight = 150;
-		kingWeight = 150;
-		posWeight = 10;
-		rowWeight = 0;
-		distWeight = 0;
+	pieceWeight = 3;
+	kingWeight = 2;
 
-		turnBonus = 20;
-		sideBonus = 25;
-		backRowBonus = 30;
-		middleBonus = 20;
-		kingCornerBonus = 0;
-	}
+	turnBonus = 20;
+	sideBonus = 30;
+	backRowBonus = 20;
+	middleBonus = 15;
+	kingCornerBonus = 30;
 	
 	for(int row=0; row<8; row++){
 		a = (clr==1)?row:7-row; //rows from bottom
 		for(col=0; col<4; col++){
 			if(square[row][col]->color==clr){ 
+				pieces++;
+				pieceDiff++;
+
 				//Add Piece Bonus
-				count += pieceWeight;
-
+				piecesScore += pieceWeight;
 				//Add King Bonus
-				if(square[row][col]->king) count+= kingWeight;
+				if(square[row][col]->king) piecesScore+= kingWeight;
 				
-				//ADD Pos Bonus
-				if(a>4) count += posWeight;
-				if(a>3 && !square[row][col]->king) count+= a*rowWeight;
-
-				//ADD SIDES
-				if(!col || col==3) count+= sideBonus;
+				//ADD Row Bonus
+				if(a>3 && !square[row][col]->king) rowScore += a*4;
 
 				//Add to distances
 				dist += distances(row, col, 3-clr); //Distance from this space to other player's kings
-				pieceDiff++;
+
+				//ADD other bonuses
+				if(!col || col==3) bonuses += sideBonus;
 			}
 			else if(square[row][col]->color==3-clr){
+				pieces++;
 				pieceDiff--;
 			}
 		}
 	}
 
-	//Distances Weight. Maximize if you have more pieces than other player.
-	dist*=distWeight;
-	if(pieceDiff>0) count+=distWeight;
-	else if(pieceDiff<0) count-=distWeight;
+	if((pieceDiff<0 && color!=clr) || (pieceDiff>0 && color==clr)){
+		tradeScore = pieces*-5;	
+		distScore = dist*-4;
+	} 
+	else {
+		tradeScore = pieces*5;
+		distScore = dist*4;
+	}
 
 	//Back Row Bonus (Rarity of all 4 of other team in back row can be ignored for !end_section)
 	a = color==1?0:7; int br = 0;
 	for(col=0;col<4;col++) {
 		if(!square[a][col]->color) br++;
 	}
-	if(br<2) count += br*backRowBonus;
+	if(br<2) bonuses += (2-br)*20;
 
 	//Middle Bonus
-	if(square[3][2]->color==clr) count+=middleBonus;
-	if(square[4][1]->color==clr) count+=middleBonus;
-
+	if(square[3][2]->color==clr) bonuses+=middleBonus;
+	if(square[4][1]->color==clr) bonuses+=middleBonus;
+	
 	//Double Corner Bonus
 	if(pieceDiff<0){
-		if(square[0][0]->color==clr || square[1][0]->color==clr) count+=kingCornerBonus;
-		if(square[6][3]->color==clr || square[7][3]->color==clr) count+=kingCornerBonus;
+		if(square[0][0]->color==clr || square[1][0]->color==clr) bonuses+=kingCornerBonus;
+		if(square[6][3]->color==clr || square[7][3]->color==clr) bonuses+=kingCornerBonus;
 	}
-
 	//TURN Bonus
-	if(turn==clr) count+=turnBonus;
+	if(turn==clr) bonuses+=turnBonus;
 
-	return count*10 + rand()%5;
+	if(end_section) count= piecesScore*10000000 + rowScore*100000 + tradeScore*1000 + bonuses*10 + rand()%10;
+	else count = piecesScore*10000000 + tradeScore*100000 + distScore*1000 + bonuses*10 + rand()%10;
+	return count;
 }
 
 int Board::countPieces(int color, bool king){

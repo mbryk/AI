@@ -9,6 +9,4 @@ class Square{
 		Square(int, int, int);
 };
 
-
-
 #endif	/* SQUARE_H */
