@@ -80,7 +80,7 @@ void Game::play(int turn){
 		turn = 1-turn;
 		
 	}
-	string colors[2] = {"Yellow","Black"};
+	string colors[2] = {"Red","Black"};
 	board->print();
 	cout<<"Game Over! "<<colors[fin-1]<<" wins!"<<endl<<endl;
 }

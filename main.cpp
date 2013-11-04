@@ -17,7 +17,7 @@ const char *parseFile(char *fileName)
 }
 
 int main(int argc, char *argv[]){
-	const char *state = (char*) "1111.1111.1111.----.----.2222.2222.2222aaaaaaaaaaa";
+	const char *state = (char*) "1111.1111.1111.----.----.2222.2222.2222";
 	int players[2] = {1,0};
 	double t_limit = 5;
 	int hnum[2] = {2,2};
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
 	char turnc; string t_limit_string;
 	int turn;
 	int t_limit_int;
-	cout<<"Whose turn is it?"<<endl<<"1:Yellow, 2:Black"<<endl;
+	cout<<"Whose turn is it?"<<endl<<"1:Red, 2:Black"<<endl;
 	do{
 		cin>>turnc;
 		turn = turnc - '0' - 1;

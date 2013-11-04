@@ -351,7 +351,7 @@ double Board::tdiff(){
 
 int Board::miniMaxVal(Move *move, int depth, bool turn, int alpha, int beta){ //Turn is true for MAX
 	gettimeofday(&t_now, NULL);
-	if(tdiff()>(t_lim-.15)) throw 2;
+	if(tdiff()>(t_lim-.25)) throw 2;
 	int trn;
 
 	Board *boardtmp;
@@ -465,7 +465,7 @@ int Board::h2each(int clr, int turn){
 
 	turnBonus = 20;
 	sideBonus = 30;
-	backRowBonus = 20;
+	backRowBonus = 15;
 	middleBonus = 15;
 	kingCornerBonus = 30;
 	
@@ -488,7 +488,7 @@ int Board::h2each(int clr, int turn){
 				dist += distances(row, col, 3-clr); //Distance from this space to other player's kings
 
 				//ADD other bonuses
-				if(!col || col==3) bonuses += sideBonus;
+				if((!col && row%2==1) || (col==3 && row%2==0)) bonuses += sideBonus;
 			}
 			else if(square[row][col]->color==3-clr){
 				pieces++;
