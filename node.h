@@ -1,19 +1,21 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "edge.h"
 #include <vector>
 
 class Node{
 public:
+	int in;
 	int activation;
 	int delta;
-	vector<Edge*> prev;
-	vector<Edge*> next;
+	int bias;
+	std::vector<int*> prev;
+	std::vector<int*> next;
 	Node(int);
-	assignNext(Edge**);
-	assignPrev(Edge**);
+	void assignNext(int*,int);
+	void assignPrev(int*,int);
 private:
 	int index;
-}
-#endif NODE_H
+};
+
+#endif

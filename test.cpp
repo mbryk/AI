@@ -1,5 +1,6 @@
+// TO DO: Get rid of L1 and L2 in this file. 
+
 #include "node.h"
-#include "edge.h"
 #include <vector>
 #include <iostream>
 
@@ -26,10 +27,10 @@ int main(int argc, char **argv){
 	}
 	int inputs, hiddens, outputs;
 	inputs = nodeAmts[0]; hiddens = nodeAmts[1]; outputs = nodeAmts[2];
-	Edge *L1[inputs][hiddens]; // Weights 
-	Edge *L2[hiddens][outputs]; //Weights
+	int *L1 = new int[inputs][hiddens]; // Weights 
+	int *L2 = new int[hiddens][outputs]; //Weights
 
-	for(j=0;j<hiddens;j++){ // Initialize Those Weights!
+	/* for(j=0;j<hiddens;j++){ // Initialize Those Weights!
 		for(i=0;i<inputs;i++){
 			L1[i][j] = new Edge();
 		}
@@ -37,6 +38,7 @@ int main(int argc, char **argv){
 			L2[j][k] = new Edge();
 		}
 	}
+	*/
 	int max = max(inputs,hiddens,outputs);
 	Node *node[layers][max];
 
@@ -44,9 +46,9 @@ int main(int argc, char **argv){
 		for(i=0;i<nodeAmts[l];i++){
 			node[l][i] = new Node(i);
 			switch(l){
-				case 0: node[0][i]->assignNext(L1); break;
-				case 1: node[1][i]->assignPrev(L1); node[1][i]->assignNext(L2); break;
-				case 2: node[2][i]->assignPrev(L2); break;
+				case 0: node[0][i]->assignNext(L1,hiddens); break;
+				case 1: node[1][i]->assignPrev(L1,inputs); node[1][i]->assignNext(L2,outputs); break;
+				case 2: node[2][i]->assignPrev(L2,hiddens); break;
 			}
 		}
 	}
@@ -88,9 +90,8 @@ int main(int argc, char **argv){
 				node[l][j]->in = 0;
 				Edge *edge;
 				i=0;
-				for (vector<Edge*>::iterator it = node[l][j]->prev.begin() ; it != node[l][j]->prev.end(); ++it){
-					edge = *it;
-					node[l][j]->in += edge->weight * node[l-1][i]->activation;
+				for (vector<int*>::iterator it = node[l][j]->prev.begin() ; it != node[l][j]->prev.end(); ++it){
+					node[l][j]->in += (*it) * node[l-1][i]->activation;
 					i++;
 				}
 				node[l][j]->in += node[l][j]->bias;
@@ -104,7 +105,7 @@ int main(int argc, char **argv){
 			score[e][j] = (y[j]==out);
 		}
 	}
-	printStuff(OUTFILE,score);	
+	printStuff(outfile,score);	
 }
 int g(int in){
 	int a = 1/(1+exp(in));
@@ -123,5 +124,9 @@ void parseExample(char *c,int** x,int** y, int ins, int outs){
 }
 
 int s2i(char){
-	
+	return 5;
+}
+
+void printStuff(string file, int*){
+
 }
