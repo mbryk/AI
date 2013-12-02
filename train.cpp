@@ -3,16 +3,35 @@
 #include "node.h"
 #include "edge.h"
 #include <iostream>
+#include <string>
 
 int main(int argc, char **argv){
 	int layers = 3;
 	int abias = -1;
-	int i,j,k,l;	
+	int i,j,k,l,alpha;	
 
-	cin>>FILE OF NETWORK 
-	the first line = inputs hiddens outputs.
+	string netfile,exfile,outfile,astring;
+	cout<<"What's yo network?"<<endl;
+	cin>>netfile;
+	cout<<"Where's yo examples?"<<endl;
+	cin>>exfile;
+	cout<<"Where should I send this baby?"<<endl;
+	cin>>outfile;
+	cout<<"So Who's Your Alpha Dog?"<<endl;
+	cin>>astring;
+	alpha = atoi(astring.c_str());
+
 	int nodeAmts[3] = {inputs,hiddens,outputs};
-	Edge *L1[inputs][hiddens]; // Weights
+	ifstream net(netfile);
+	char *str = new char[500];
+	net.getline(str,500);
+	nodeAmts[0] = s2i(strtok(str," "));
+	for(i=1;i<layers;i++){
+		nodeAmts[i] = s2i(strtok(NULL," "));
+	}
+	int inputs, hiddens, outputs;
+	inputs = nodeAmts[0]; hiddens = nodeAmts[1]; outputs = nodeAmts[2];
+	Edge *L1[inputs][hiddens]; // Weights 
 	Edge *L2[hiddens][outputs]; //Weights
 
 	for(j=0;j<hiddens;j++){ // Initialize Those Weights!
@@ -36,20 +55,31 @@ int main(int argc, char **argv){
 			}
 		}
 	}
-	PARSE FILE FOR WEIGHTS
 
-	cin>>FILE OF EXAMPLES
-	examples = Number of Examples
-	int x[inputs]; int y[outputs];
+	/****** PARSE FILE FOR WEIGHTS **********/
+	for(j=0;j<hiddens;j++){
+		net.getline(str,500);
+		node[1][j]->bias = s2i(strtok(str," "));
+		for(i=0;i<inputs;i++){
+			L1[i][j]->weight = s2i(strtok(NULL," "));
+		}
+	}
+	for(k=0;k<outputs;k++){
+		net.getline(str,500);
+		node[2][k]->bias = s2i(strtok(str," "));
+		for(j=0;j<hiddens;j++){
+			L2[j][k]->weight = s2i(strtok(NULL," "));
+		}
+	}
 
-	cin>>OUTFILE
-
-	int alpha;
-	cin>>alpha;
-
+	/******** EXAMPLES *****************/
+	ifstream exstream(exfile);
+	char *c = new char[500];
 	for(t=0;t<epochs;t++){
+		exstream.getline(c,500);
+		examples = s2i(strtok(c," "));
 		for(e=0;e<examples;e++){
-			c = getline(FILE 2)
+			extream.getline(c,500);
 			parseExample(c,&x,&y);
 			// Initialize Input Layer
 			for(i=0;i<inputs;i++){ 
@@ -105,9 +135,12 @@ int main(int argc, char **argv){
 				node[2][k]->bias += alpha * abias * node[2][k]->delta;
 			}
 		}
+		exstream.clear() ;
+		exstream.seekg(0, ios::beg) ;
 	}	
-	printNetwork(OUTFILE);
+	printNetwork(outfile,L1,L2);
 }
+
 int g(int in){
 	int a = 1/(1+exp(in));
 	return a;
@@ -115,4 +148,17 @@ int g(int in){
 int gprime(int in){
 	int a = g(in);
 	return (a*(1-a));
+}
+void parseExample(char *c,int** x,int** y, int ins, int outs){
+	x[0] = s2i(strtok(c," "));
+	for(int i=1;i<ins;i++)
+		x[i]=s2i(strtok(NULL," "));
+	for(int j=0;j<outs;j++)
+		y[j]=s2i(strtok(NULL," "));
+}
+void printNetwork(string file,Edge **L1, Edge **L2){
+
+}
+int s2i(char){
+	
 }
