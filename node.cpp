@@ -1,17 +1,20 @@
 #include "node.h"
 
 Node::Node(int i){
+	in = 0; activation = 0; delta = 0; bias = 0; //Not actually that important, I think
 	index = i;
 }
 
-void Node::assignPrev(int *weights, int sources){
+void Node::assignPrev(double *weights, int sources, int cols){
+	prev = new double*[sources];
 	for(int i=0;i<sources;i++){
-		prev.push_back(&weights[i*index]);
+		prev[i] = &weights[i*cols+index];
 	}
 }
 
-void Node::assignNext(int *weights, int targets){
+void Node::assignNext(double *weights, int targets, int cols){
+	next = new double*[targets];
 	for(int j=0;j<targets;j++){
-		next.push_back(&weights[index*j]);
+		next[j] = &weights[index*cols+j];
 	}
 }

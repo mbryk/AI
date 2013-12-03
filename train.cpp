@@ -8,35 +8,39 @@
 #include "unistd.h"
 using namespace std;
 
-int g(int in){
-	int a = 1/(1+exp(in));
+double g(double in){
+	double a = 1/(1+exp(in));
 	return a;
 }
-int gprime(int in){
-	int a = g(in);
+double gprime(double in){
+	double a = g(in);
 	return (a*(1-a));
 }
-int s2i(char*){
-	return 5;
+int s2i(char *str){
+	return atoi(str);
 }
-void parseExample(char *c,int* x,int* y, int ins, int outs){
-	x[0] = s2i(strtok(c," "));
+double s2f(char *str){
+	return strtod(str,NULL);
+}
+void parseExample(char *c,double* x,double* y, int ins, int outs){
+	x[0] = s2f(strtok(c," "));
 	for(int i=1;i<ins;i++)
-		x[i]=s2i(strtok(NULL," "));
+		x[i]=s2f(strtok(NULL," "));
 	for(int j=0;j<outs;j++)
-		y[j]=s2i(strtok(NULL," "));
+		y[j]=s2f(strtok(NULL," "));
 }
-void printNetwork(string file, int *L1, int *L2){
+void printNetwork(string file, double *L1, double *L2){
 
 }
 
 int main(int argc, char **argv){
 	int layers = 3;
 	int abias = -1;
-	int i,j,k,l,alpha;	
+	int i,j,k,l;
+	double alpha;	
 
 	string netfile,exfile,outfile,astring;
-	cout<<"What's yo network?"<<endl;
+	/*cout<<"What's yo network?"<<endl;
 	cin>>netfile;
 	cout<<"Where's yo examples?"<<endl;
 	cin>>exfile;
@@ -44,7 +48,11 @@ int main(int argc, char **argv){
 	cin>>outfile;
 	cout<<"So Who's Your Alpha Dog?"<<endl;
 	cin>>astring;
-	alpha = atoi(astring.c_str());
+	*/
+	// TEMP
+	netfile = "net1init"; exfile = "ex1train"; outfile = "net1out"; astring = ".1";
+	alpha = strtod(astring.c_str(),NULL);
+
 
 	int nodeAmts[3];
 	ifstream net(netfile.c_str());
@@ -56,28 +64,19 @@ int main(int argc, char **argv){
 	}
 	int inputs, hiddens, outputs;
 	inputs = nodeAmts[0]; hiddens = nodeAmts[1]; outputs = nodeAmts[2];
-	int *L1 = new int[inputs*hiddens]; // Weights 
-	int *L2 = new int[hiddens*outputs]; //Weights
-
-/*	for(j=0;j<hiddens;j++){ // Initialize Those Weights!
-		for(i=0;i<inputs;i++){
-			L1[i][j] = new Edge();
-		}
-		for(k=0;k<outputs;k++){
-			L2[j][k] = new Edge();
-		}
-	}
-*/
+	double *L1 = new double[inputs*hiddens]; //Weights 
+	double *L2 = new double[hiddens*outputs]; //Weights
+	L1[1] = 10;
 	int nmax = max(inputs,max(hiddens,outputs));
-	Node *node[layers][nmax];
+	Node **node[layers][nmax];
 
 	for(l=0;l<layers;l++){ // Make those nodes!
 		for(i=0;i<nodeAmts[l];i++){
-			node[l][i] = new Node(i);
+			*node[l][i] = new Node(i);
 			switch(l){
-				case 0: node[0][i]->assignNext(L1,hiddens); break;
-				case 1: node[1][i]->assignPrev(L1,inputs); node[1][i]->assignNext(L2,outputs); break;
-				case 2: node[2][i]->assignPrev(L2,hiddens); break;
+				case 0: (*node[0][i])->assignNext(L1,hiddens,hiddens); break;
+				case 1: (*node[1][i])->assignPrev(L1,inputs,hiddens); (*node[1][i])->assignNext(L2,outputs,outputs); break;
+				case 2: (*node[2][i])->assignPrev(L2,hiddens,outputs); break;
 			}
 		}
 	}
@@ -85,26 +84,27 @@ int main(int argc, char **argv){
 	/****** PARSE FILE FOR WEIGHTS **********/
 	for(j=0;j<hiddens;j++){
 		net.getline(str,500);
-		node[1][j]->bias = s2i(strtok(str," "));
+		(*node[1][j])->bias = s2f(strtok(str," "));
 		for(i=0;i<inputs;i++){
-			L1[i*j] = s2i(strtok(NULL," "));
+			L1[i*hiddens+j] = s2f(strtok(NULL," "));
 		}
 	}
 	for(k=0;k<outputs;k++){
 		net.getline(str,500);
-		node[2][k]->bias = s2i(strtok(str," "));
+		node[2][k]->bias = s2f(strtok(str," "));
 		for(j=0;j<hiddens;j++){
-			L2[j*k] = s2i(strtok(NULL," "));
+			L2[j*outputs+k] = s2f(strtok(NULL," "));
 		}
 	}
 
 	/******** EXAMPLES *****************/
 	ifstream exstream(exfile.c_str());
 	char *c = new char[500];
-	int *x = new int[inputs];
-	int *y = new int[outputs];
-	int examples, epochs, e,delta;
-	int *w;
+	double *x = new double[inputs];
+	double *y = new double[outputs];
+	int examples, epochs, e;
+	double delta;
+	double *w;
 	exstream.getline(c,500);
 	epochs = s2i(strtok(c," "));
 	examples = s2i(strtok(c," "));
@@ -121,13 +121,12 @@ int main(int argc, char **argv){
 			for(l=1;l<layers;l++){
 				for(j=0;j<nodeAmts[l];j++){
 					node[l][j]->in = 0;
-					i=0;
-					for (vector<int*>::iterator it = node[l][j]->prev.begin() ; it != node[l][j]->prev.end(); ++it){
-						w = *it;
+					for(i=0;i<nodeAmts[l-1];i++){
+						w = node[l][j]->prev[i];
 						node[l][j]->in += *w * node[l-1][i]->activation;
 						i++;
 					}
-					node[l][j]->in += node[l][j]->bias;
+					node[l][j]->in += node[l][j]->bias * abias;
 					node[l][j]->activation = g(node[l][j]->in);
 				}
 			}
@@ -142,8 +141,8 @@ int main(int argc, char **argv){
 				for(i=0;i<nodeAmts[l];i++){
 					delta = 0;
 					j = 0;
-					for (vector<int*>::iterator it = node[l][i]->next.begin() ; it != node[l][i]->next.end(); ++it){
-						w = *it;
+					for(j=0;i<nodeAmts[l+1];j++){
+						w = node[l][i]->prev[j];
 						delta += *w * node[l+1][j]->delta;
 						j++;
 					}
@@ -154,14 +153,14 @@ int main(int argc, char **argv){
 			// Update Weights
 			for(j=0;j<hiddens;j++){
 				for(i=0;i<inputs;i++){
-					L1[i*j] += alpha * node[0][i]->activation * node[1][j]->delta;
+					L1[i*hiddens+j] += alpha * node[0][i]->activation * node[1][j]->delta;
 				} 
 				node[1][j]->bias += alpha * abias * node[1][j]->delta;
 			}
 
 			for(k=0;k<outputs;k++){
 				for(j=0;j<hiddens;j++){
-					L2[j*k] += alpha * node[1][j]->activation * node[2][k]->delta;
+					L2[j*outputs+k] += alpha * node[1][j]->activation * node[2][k]->delta;
 				}
 				node[2][k]->bias += alpha * abias * node[2][k]->delta;
 			}
