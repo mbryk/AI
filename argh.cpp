@@ -23,13 +23,14 @@ double s2f(char *str){
 	return strtod(str,NULL);
 }
 void parseExample(char *c,double* x,double* y, int ins, int outs){
-	x[0] = strtod(strtok(c," "),NULL);
+	x[0] = s2f(strtok(c," "));
 	for(int i=1;i<ins;i++)
-		x[i]=strtod(strtok(NULL," "),NULL);
+		x[i]=s2f(strtok(NULL," "));
 	for(int j=0;j<outs;j++)
-		y[j]=strtod(strtok(NULL," "),NULL);
+		y[j]=s2f(strtok(NULL," "));
 }
 void printNetwork(string file, double *L1, double *L2){
+
 }
 
 int main(int argc, char **argv){
@@ -67,15 +68,16 @@ int main(int argc, char **argv){
 	double *L2 = new double[hiddens*outputs]; //Weights
 	L1[1] = 10;
 	int nmax = max(inputs,max(hiddens,outputs));
-	Node *node[layers][nmax];
+	Node **node[layers][nmax];
 
 	for(l=0;l<layers;l++){ // Make those nodes!
 		for(i=0;i<nodeAmts[l];i++){
-			node[l][i] = new Node(i);
+			Node *n = new Node(i);
+			node[l][i] = &n;
 			switch(l){
-				case 0: node[0][i]->assignNext(L1,hiddens,hiddens); break;
-				case 1: node[1][i]->assignPrev(L1,inputs,hiddens); node[1][i]->assignNext(L2,outputs,outputs); break;
-				case 2: node[2][i]->assignPrev(L2,hiddens,outputs); break;
+				case 0: (*node[0][i])->assignNext(L1,hiddens,hiddens); break;
+				case 1: (*node[1][i])->assignPrev(L1,inputs,hiddens); (*node[1][i])->assignNext(L2,outputs,outputs); break;
+				case 2: (*node[2][i])->assignPrev(L2,hiddens,outputs); break;
 			}
 		}
 	}
@@ -83,42 +85,18 @@ int main(int argc, char **argv){
 	/****** PARSE FILE FOR WEIGHTS **********/
 	for(j=0;j<hiddens;j++){
 		net.getline(str,500);
-		node[1][j]->bias = s2f(strtok(str," "));
+		(*node[1][j])->bias = s2f(strtok(str," "));
 		for(i=0;i<inputs;i++){
 			L1[i*hiddens+j] = s2f(strtok(NULL," "));
 		}
 	}
 	for(k=0;k<outputs;k++){
 		net.getline(str,500);
-		node[2][k]->bias = s2f(strtok(str," "));
+		(*node[2][k])->bias = s2f(strtok(str," "));
 		for(j=0;j<hiddens;j++){
 			L2[j*outputs+k] = s2f(strtok(NULL," "));
 		}
 	}
-
-	// Print network for debugging
-/*	for(l=0;l<layers;l++){
-		cout<<"Layer = "<<l<<endl;
-		for(i=0;i<nodeAmts[l];i++){
-			cout<<"i = "<<i<<endl;
-			Node *n = node[l][i];
-			cout<<"Bias = "<<n->bias<<endl;
-			cout<<"Prev:"<<endl;
-			if(l!=0){
-				for(j=0;j<nodeAmts[l-1];j++){
-					cout<<*(n->prev[j])<<", ";
-				}
-			}
-			cout<<endl<<"Next:"<<endl;
-			if(l!=2){
-				for(j=0;j<nodeAmts[l+1];j++){
-					cout<<*(n->next[j])<<", ";
-				}
-			}
-			cout<<endl;
-		}
-	}
-*/
 
 	/******** EXAMPLES *****************/
 	ifstream exstream(exfile.c_str());
@@ -129,7 +107,7 @@ int main(int argc, char **argv){
 	double delta;
 	double *w;
 	exstream.getline(c,500);
-	epochs = 100;
+	epochs = s2i(strtok(c," "));
 	examples = s2i(strtok(c," "));
 	for(int t=0;t<epochs;t++){
 		for(e=0;e<examples;e++){
@@ -137,26 +115,26 @@ int main(int argc, char **argv){
 			parseExample(c,x,y,inputs,outputs);
 			// Initialize Input Layer
 			for(i=0;i<inputs;i++){ 
-				node[0][i]->activation = x[i];
+				(*node[0][i])->activation = x[i];
 			}
 
 			// Propagate To Output
 			for(l=1;l<layers;l++){
 				for(j=0;j<nodeAmts[l];j++){
-					node[l][j]->in = 0;
+					(*node[l][j])->in = 0;
 					for(i=0;i<nodeAmts[l-1];i++){
-						w = node[l][j]->prev[i];
-						node[l][j]->in += *w * node[l-1][i]->activation;
+						w = (*node[l][j])->prev[i];
+						(*node[l][j])->in += *w * (*node[l-1][i])->activation;
 						i++;
 					}
-					node[l][j]->in += node[l][j]->bias * abias;
-					node[l][j]->activation = g(node[l][j]->in);
+					(*node[l][j])->in += (*node[l][j])->bias * abias;
+					(*node[l][j])->activation = g((*node[l][j])->in);
 				}
 			}
 
 			// Compute Error At Output
 			for(j=0;j<outputs;j++){
-				node[2][j]->delta = gprime(node[2][j]->in) * y[j] - node[2][j]->activation;
+				(*node[2][j])->delta = gprime((*node[2][j])->in) * y[j] - (*node[2][j])->activation;
 			}
 
 			// Propagate Deltas Back
@@ -164,28 +142,28 @@ int main(int argc, char **argv){
 				for(i=0;i<nodeAmts[l];i++){
 					delta = 0;
 					j = 0;
-					for(j=0;j<nodeAmts[l+1];j++){
-						w = node[l][i]->prev[j];
-						delta += *w * node[l+1][j]->delta;
+					for(j=0;i<nodeAmts[l+1];j++){
+						w = (*node[l][i])->prev[j];
+						delta += *w * (*node[l+1][j])->delta;
 						j++;
 					}
-					node[l][i]->delta = gprime(node[l][i]->in) * delta;
+					(*node[l][i])->delta = gprime((*node[2][j])->in)*delta;
 				}
 			}
 
 			// Update Weights
 			for(j=0;j<hiddens;j++){
 				for(i=0;i<inputs;i++){
-					L1[i*hiddens+j] += alpha * node[0][i]->activation * node[1][j]->delta;
+					L1[i*hiddens+j] += alpha * (*node[0][i])->activation * (*node[1][j])->delta;
 				} 
-				node[1][j]->bias += alpha * abias * node[1][j]->delta;
+				(*node[1][j])->bias += alpha * abias * (*node[1][j])->delta;
 			}
 
 			for(k=0;k<outputs;k++){
 				for(j=0;j<hiddens;j++){
-					L2[j*outputs+k] += alpha * node[1][j]->activation * node[2][k]->delta;
+					L2[j*outputs+k] += alpha * (*node[1][j])->activation * (*node[2][k])->delta;
 				}
-				node[2][k]->bias += alpha * abias * node[2][k]->delta;
+				(*node[2][k])->bias += alpha * abias * (*node[2][k])->delta;
 			}
 		}
 		exstream.clear() ;
@@ -193,31 +171,6 @@ int main(int argc, char **argv){
 		exstream.getline(c,500);
 	}	
 	printNetwork(outfile,L1,L2);
-
-		// Print network for debugging
-	for(l=0;l<layers;l++){
-		cout<<"Layer = "<<l<<endl;
-		for(i=0;i<nodeAmts[l];i++){
-			cout<<"i = "<<i<<endl;
-			Node *n = node[l][i];
-			cout<<"Bias = "<<n->bias<<endl;
-			cout<<"Prev:"<<endl;
-			if(l!=0){
-				for(j=0;j<nodeAmts[l-1];j++){
-					cout<<*(n->prev[j])<<", ";
-				}
-			}
-			cout<<endl<<"Next:"<<endl;
-			if(l!=2){
-				for(j=0;j<nodeAmts[l+1];j++){
-					cout<<*(n->next[j])<<", ";
-				}
-			}
-			cout<<endl;
-		}
-	}
-
-
 
 	return 0;
 }
