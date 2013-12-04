@@ -10,7 +10,7 @@ public:
 	double** prev;
 	double** next;
 	Node(int);
-	void assignNext(double*,int,int);
+	void assignNext(double*,int);
 	void assignPrev(double*,int,int);
 private:
 	int index;
