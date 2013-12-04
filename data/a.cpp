@@ -7,32 +7,26 @@
 
 using namespace std;
 int main(){
-	string a = "strikeset";string b = "bset";
+	string a = "bsetall";string b = "bset";
 	ifstream in(a.c_str()); 
 	ofstream ot(b.c_str());
-	char *d[5];
+	char *d[17];
 	char *tmp;
 	char *h = new char[500];
 	char *c = new char[500];
-	double ii[5];
 	double tm;
-	//double *dmax = new double[5];
-	double dmax[5] = {7000,17,27.5,78.7,1};
+	double dmax[17] = {3,9,42,1.75,95.5,100,6.28,7,4,1,1,1,1,1,1,1,1};
 	ot.precision(3);
 	ot<<fixed;
 	int i,j;
-	double total,k;
-	total=0;
-	char st;
 	while(!in.eof()){
-		k++;
 /*		strtok(c," ");
 		for(int i=0;i<7;i++){
 			d[i] = strtok(NULL," ");
 		}
 */
 		in.getline(c,500);
-		strtok(c," "); strtok(NULL," ");
+		strtok(c," ");
 
 /*		for(int i=0;i<6;i++){
 			in>>d[i];
@@ -44,23 +38,23 @@ int main(){
 			<<d[5]<<" "
 			<<d[4]<<endl;
 */
-		for(i=0;i<5;i++){
+		for(i=0;i<16;i++){
 			d[i] = strtok(NULL," ");
-			tm = strtod(d[i],NULL);
-			if(i==0){
-				st = (tm>300)?'1':'0';
-			} else
-				ii[i] = tm/dmax[i];
-			//dmax[i] = max(dmax[i],tm);
 		}
-		ot<<ii[1]<<" "
-			<<ii[2]<<" "
-			<<ii[3]<<" "
-			<<ii[4]<<" "
-			<<st<<endl;		
-//		ot<<endl;
+		d[15][1] = '\0';
+		in.getline(h,500);
+		d[16] = strtok(h," ");
+		d[16][1] = '\0';
+		for (i=0;i<9;i++){
+			tm = strtod(d[i],NULL);
+			tm /= dmax[i];
+			ot<<tm<<" ";
+		}
+		for(j=9;j<17;j++){
+			ot<<d[j]<<" ";
+		}
+		ot<<endl;
 	}
-	cout<<(total/k)<<endl;
 	ot.close();
 	in.close();
 	return 0;

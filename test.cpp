@@ -89,7 +89,7 @@ int main(int argc, char **argv){
 	double *x = new double[inputs];
 	double *y = new double[outputs];
 	int examples, epochs, e;
-	double delta;
+	double delta,act,in;
 	double *w;
 	exstream.getline(c,500);
 	examples = atoi(strtok(c," "));
@@ -119,7 +119,9 @@ int main(int argc, char **argv){
 
 		// Compute Error At Output
 		for(j=0;j<outputs;j++){
-			output = (node[2][j]->activation<.5)?0:1;
+			in = node[2][j]->in;
+			act = node[2][j]->activation;
+			output = (act < .5)?0:1;
 			if(y[j]==1){
 				if(output==1) A[j]++;
 				else C[j]++;
