@@ -7,7 +7,7 @@
 
 using namespace std;
 int main(){
-	string a = "strikeset";string b = "bset";
+	string a = "strikeset";string b = "bsetall";
 	ifstream in(a.c_str()); 
 	ofstream ot(b.c_str());
 	char *d[5];
@@ -24,6 +24,7 @@ int main(){
 	double total,k;
 	total=0;
 	char st;
+	int s = 0;
 	while(!in.eof()){
 		k++;
 /*		strtok(c," ");
@@ -48,7 +49,7 @@ int main(){
 			d[i] = strtok(NULL," ");
 			tm = strtod(d[i],NULL);
 			if(i==0){
-				st = (tm>300)?'1':'0';
+				st = (tm>150)?'1':'0';
 			} else
 				ii[i] = tm/dmax[i];
 			//dmax[i] = max(dmax[i],tm);
@@ -60,7 +61,7 @@ int main(){
 			<<st<<endl;		
 //		ot<<endl;
 	}
-	cout<<(total/k)<<endl;
+	//cout<<(total/k)<<endl;
 	ot.close();
 	in.close();
 	return 0;

@@ -29,21 +29,19 @@ void printNetwork(string file, double *L1, double *L2){
 int main(int argc, char **argv){
 	int layers = 3;
 	double abias = -1;
-	int i,j,k,l;
+	int i,j,k,l,epochs;
 	double alpha;	
 
-	string netfile,exfile,outfile,astring;
-	cout<<"What's yo network?"<<endl;
-	cin>>netfile;
-	cout<<"Where's yo examples?"<<endl;
-	cin>>exfile;
-	cout<<"Where should I send this baby?"<<endl;
-	cin>>outfile;
-	cout<<"So Who's Your Alpha Dog?"<<endl;
-	cin>>astring;
+	string netfile,exfile,outfile,astring,epstring;
+	cout<<"Network:\t";	cin>>netfile;
+	cout<<"Training Set:\t"; cin>>exfile;
+	cout<<"Output File:\t";	cin>>outfile;
+	cout<<"Alpha:\t\t";	cin>>astring;
+	cout<<"Epochs:\t\t"; cin>>epstring;
 	// TEMP
 //	netfile = "net1init"; exfile = "ex1train"; outfile = "net1out"; astring = ".1";
 	alpha = strtod(astring.c_str(),NULL);
+	epochs = atoi(epstring.c_str());
 
 	int nodeAmts[3];
 	ifstream net(netfile.c_str());
@@ -92,11 +90,10 @@ int main(int argc, char **argv){
 	char *c = new char[500];
 	double *x = new double[inputs];
 	double *y = new double[outputs];
-	int examples, epochs, e;
+	int examples, e;
 	double delta;
 	double *w;
 	exstream.getline(c,500);
-	epochs = 100;
 	examples = atoi(strtok(c," "));
 	for(int t=0;t<epochs;t++){
 		for(e=0;e<examples;e++){

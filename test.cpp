@@ -33,13 +33,9 @@ int main(int argc, char **argv){
 	int i,j,k,l;	
 	
 	string netfile,exfile,outfile;
-
-	cout<<"What's yo network?"<<endl;
-	cin>>netfile;
-	cout<<"Where's yo examples?"<<endl;
-	cin>>exfile;
-	cout<<"Where should I send this baby?"<<endl;
-	cin>>outfile;
+	cout<<"Network:\t";	cin>>netfile;
+	cout<<"Test Set:\t"; cin>>exfile;
+	cout<<"Output File:\t";	cin>>outfile;
 
 	int nodeAmts[3];
 	ifstream net(netfile.c_str());
